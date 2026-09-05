@@ -1,15 +1,3 @@
-# 1. Streamlit 및 클라우드플레어 터널(cloudflared) 설치
-import subprocess
-import sys
-
-subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit", "pandas"])
-
-# cloudflared 바이너리 다운로드 ( 리눅스 기준 )
-!curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-!chmod +x cloudflared
-
-# 2. Streamlit 앱 코드 생성 (app.py)
-app_code = """
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -68,33 +56,3 @@ if st.session_state.log_data:
         st.rerun()
 else:
     st.info("아직 기록된 운동이 없습니다. 위에서 첫 운동을 기록해 보세요!")
-"""
-
-with open("app.py", "w", encoding="utf-8") as f:
-    f.write(app_code)
-
-# 3. Streamlit 백그라운드 실행 및 Cloudflare 터널 연결
-import time
-import re
-from IPython.display import Markdown, display
-
-# Streamlit 실행
-!streamlit run app.py &>/dev/null &
-time.sleep(3)
-
-# Cloudflare 터널 실행 후 주소 추출
-tunnel_process = subprocess.Popen(
-    ["./cloudflared", "tunnel", "--url", "http://localhost:8501"],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    text=True
-)
-
-url = None
-for line in tunnel_process.stdout:
-    match = re.search(r"https://[a-zA-Z0-9\-]+\.trycloudflare\.com", line)
-    if match:
-        url = match.group(0)
-        break
-
-display(Markdown(f"### 🔗 접속 링크\n아래 링크를 클릭하면 무한 로딩 없이 바로 웹사이트가 열립니다!\n\n**[{url}]({url})**"))
