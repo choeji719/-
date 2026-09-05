@@ -2,54 +2,68 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-st.set_page_config(page_title="홈트 기록장", page_icon="💪", layout="centered")
+# 페이지 기본 설정 (와이드 모드 대신 깔끔한 중앙 정렬 폼)
+st.set_page_config(page_title="모두의 기록 - 1초 만에 남기는 일상 횟수", page_icon="⚡", layout="centered")
+
+# 커스텀 CSS로 UI를 더 직관적이고 앱처럼 보이게 꾸미기
+st.markdown("""
+    <style>
+    .main-title {
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 0px;
+    }
+    .sub-desc {
+        color: gray;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # 세션 스테이트 초기화 (데이터 저장용)
 if 'log_data' not in st.session_state:
     st.session_state.log_data = []
 
-# 상단 네비게이션 (페이지 전환용 라디오 버튼 또는 탭)
-menu = st.radio("메뉴 선택", ["오늘의 운동 기록", "캘린더 및 과거 기록"], horizontal=True, label_visibility="collapsed")
+# 상단 네비게이션 (뒤로가기/전환을 직관적으로 구현)
+nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (날짜별 모아보기)"], horizontal=True, label_visibility="collapsed")
 
-st.divider()
+st.markdown("---")
 
-if menu == "오늘의 운동 기록":
-    st.title("💪 오늘의 홈트 기록")
-    st.write("오늘 어떤 운동을 몇 번 했는지 편하게 기록해 보세요!")
+# 1. 접속하자마자 보이는 '바로 기록하기' 화면
+if nav == "⚡ 바로 기록하기":
+    st.markdown('<p class="main-title">⚡ 무엇을 기록할까요?</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-desc">복잡한 메뉴 없이, 들어오자마자 바로 남기세요.</p>', unsafe_allow_html=True)
 
-    with st.form("homet_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            date_input = st.date_input("날짜", value=datetime.now())
-            exercise_name = st.selectbox(
-                "운동 종목", 
-                ["푸시업", "스쿼트", "플랭크 (초)", "런지", "윗몸일으키기", "버피", "기타 직접 입력"]
-            )
-            if exercise_name == "기타 직접 입력":
-                exercise_name = st.text_input("운동 이름 입력")
-                
-        with col2:
-            target_count = st.number_input("목표 횟수 (또는 시간)", min_value=1, value=10, step=1)
-            actual_count = st.number_input("실제 한 횟수", min_value=1, value=10, step=1)
+    with st.form("quick_log_form", clear_on_submit=True):
+        # 날짜 기본값은 오늘
+        date_input = st.date_input("기록 날짜", value=datetime.now())
+        
+        # 기록할 항목 (커피, 운동, 영양제 등 자유 입력 또는 선택)
+        category = st.selectbox(
+            "기록 항목", 
+            ["☕ 커피 마신 잔수", "💪 운동 횟수", "💊 영양제 뽀개기", "💧 물 마신 컵", "📚 책 읽은 페이지", "✨ 직접 입력"]
+        )
+        if category == "✨ 직접 입력":
+            category = st.text_input("어떤 행동인가요?", placeholder="예: 스쿼트, 영양제 등")
             
-        memo = st.text_input("간단 메모 (선택사항)", placeholder="컨디션 좋음, 자세 깔끔 등")
-        submitted = st.form_submit_button("기록 저장하기 ✨", use_container_width=True)
+        count = st.number_input("횟수 / 양", min_value=1, value=1, step=1)
+        memo = st.text_input("메모 (선택)", placeholder="특이사항이나 간단한 메모")
+        
+        submitted = st.form_submit_button("🚀 1초 만에 기록 저장", use_container_width=True)
         
         if submitted:
-            is_challenge = actual_count > target_count
             new_entry = {
                 "날짜": date_input.strftime("%Y-%m-%d"),
-                "운동": exercise_name,
-                "목표": target_count,
-                "달성": actual_count,
-                "상태": "🔥 도전 성공!" if is_challenge else "완료",
-                "메모": memo
+                "항목": category,
+                "횟수": count,
+                "메모": memo,
+                "시간": datetime.now().strftime("%H:%M")
             }
             st.session_state.log_data.append(new_entry)
-            st.success(f"'{exercise_name}' 기록이 저장되었습니다!")
+            st.success("✅ 저장 완료! 아래에서 바로 확인할 수 있어요.")
 
-    # 오늘 한 기록 바로 보기
-    st.subheader("📋 오늘의 실시간 기록 리스트")
+    st.markdown("### 📋 오늘의 실시간 기록")
     if st.session_state.log_data:
         df = pd.DataFrame(st.session_state.log_data)
         today_str = datetime.now().strftime("%Y-%m-%d")
@@ -58,38 +72,51 @@ if menu == "오늘의 운동 기록":
         if not df_today.empty:
             st.dataframe(df_today.iloc[::-1].reset_index(drop=True), use_container_width=True)
         else:
-            st.info("오늘 아직 기록된 운동이 없습니다.")
+            st.info("오늘 아직 기록된 내역이 없습니다.")
     else:
-        st.info("기록된 운동이 없습니다.")
+        st.info("첫 기록을 남겨보세요!")
 
-elif menu == "캘린더 및 과거 기록":
-    st.title("📅 캘린더 및 과거 기록")
-    st.write("날짜를 선택하여 과거에 어떤 운동을 했는지 확인해 보세요.")
+# 2. 달력 및 과거 기록 조회 화면
+elif nav == "📅 캘린더 (날짜별 모아보기)":
+    st.markdown('<p class="main-title">📅 날짜별 기록 캘린더</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-desc">과거의 오늘, 어떤 기록을 남겼는지 확인해보세요.</p>', unsafe_allow_html=True)
 
     if st.session_state.log_data:
         df = pd.DataFrame(st.session_state.log_data)
         
-        # 기록이 있는 날짜 목록 추출 (중복 제거, 최신순)
+        # 날짜 목록 추출 (최신순)
         available_dates = sorted(df["날짜"].unique(), reverse=True)
         
-        selected_date = st.selectbox("조회할 날짜 선택", available_dates)
+        selected_date = st.selectbox("조회할 날짜를 선택하세요", available_dates)
         
-        # 선택한 날짜의 기록 필터링
+        # 선택한 날짜의 데이터 필터링
         df_selected = df[df["날짜"] == selected_date]
         
-        st.subheader(f"📌 {selected_date} 운동 내역")
+        st.markdown(f"### 📌 {selected_date}의 기록 모음")
         st.dataframe(df_selected.reset_index(drop=True), use_container_width=True)
         
-        # 요약 통계
-        total_exercises = len(df_selected)
-        challenge_count = len(df_selected[df_selected["상태"] == "🔥 도전 성공!"])
-        
-        col1, col2 = st.columns(2)
-        col1.metric("총 운동 종목 수", f"{total_exercises}개")
-        col2.metric("도전 성공 횟수", f"{challenge_count}번")
+        # 간단 통계
+        total_logs = len(df_selected)
+        st.metric("이 날의 총 기록 횟수", f"{total_logs}건")
         
         if st.button("전체 데이터 초기화"):
             st.session_state.log_data = []
             st.rerun()
     else:
-        st.info("아직 저장된 과거 기록이 없습니다. 먼저 운동을 기록해 보세요!")
+        st.info("아직 저장된 과거 기록이 없습니다.")
+
+# ==========================================
+# 3. 미래의 수익화를 위한 하단 광고 영역 (플레이스홀더)
+# ==========================================
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("---")
+# 광고 영역 시각화 박스 (나중에 구글 애드센스 HTML 코드로 대체할 수 있는 공간)
+st.markdown(
+    """
+    <div style="background-color: #f1f3f5; padding: 15px; border-radius: 8px; text-align: center; color: #868e96; font-size: 13px;">
+        📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.<br>
+        (트래픽이 모이면 광고를 붙여 수익을 창출할 수 있습니다.)
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
