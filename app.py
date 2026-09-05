@@ -43,7 +43,7 @@ font_mapping = {
 
 
 # =========================================================
-# 세션 스테이트 초기화 (탭 유지 처리 포함)
+# 세션 스테이트 초기화 및 쿼리 파라미터 처리
 # =========================================================
 
 kst_now = get_kst_now()
@@ -80,12 +80,24 @@ if "is_editing" not in st.session_state:
 if "current_count" not in st.session_state:
     st.session_state.current_count = 1
 
-# 캘린더 날짜를 클릭했을 때 캘린더 탭이 강제로 유지되도록 처리
-if "cal_date" in st.query_params or st.query_params.get("tab") == "cal":
-    st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-
 if "nav_selection" not in st.session_state:
     st.session_state.nav_selection = "⚡ 바로 기록하기"
+
+# 캘린더 날짜 클릭 시 탭 이동 처리 및 쿼리 파라미터 정리(고착화 방지)
+if "cal_date" in st.query_params:
+    try:
+        clicked_date_str = st.query_params["cal_date"]
+        if isinstance(clicked_date_str, list):
+            clicked_date_str = clicked_date_str[0]
+        st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
+        st.session_state.is_editing = False
+        st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
+    except Exception:
+        pass
+    st.query_params.clear()
+elif st.query_params.get("tab") == "cal":
+    st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
+    st.query_params.clear()
 
 
 # =========================================================
@@ -424,7 +436,6 @@ if nav == "⚡ 바로 기록하기":
         if not df_today.empty:
             display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
             
-            # 오늘의 실시간 기록 표: 링크나 클릭 기능 없는 순수 정적 테이블
             table_html = """
             <style>
             .log-table-container {
@@ -501,24 +512,12 @@ elif nav == "📅 캘린더 (월간 보기)":
     else:
         df_all = pd.DataFrame(columns=["id", "날짜", "항목", "횟수", "메모", "시간"])
 
-    # URL 쿼리 파라미터로 날짜 클릭 감지 (tab=cal 파라미터로 탭 이탈 방지)
-    query_params = st.query_params
-    if "cal_date" in query_params:
-        try:
-            clicked_date_str = query_params["cal_date"]
-            if isinstance(clicked_date_str, list):
-                clicked_date_str = clicked_date_str[0]
-            st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
-            st.session_state.is_editing = False
-        except Exception:
-            pass
-
     cal_obj = calendar.TextCalendar(firstweekday=6)
     cal = cal_obj.monthdayscalendar(selected_year, selected_month)
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 아이폰 스타일 캘린더 CSS (캘린더 날짜만 클릭 가능하도록 유지)
+    # 아이폰 스타일 캘린더 CSS
     cal_html = """
     <style>
     .iphone-table-container {
