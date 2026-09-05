@@ -43,7 +43,7 @@ font_mapping = {
 
 
 # =========================================================
-# 세션 스테이트 초기화 및 쿼리 파라미터 처리
+# 세션 스테이트 초기화 (URL 파라미터 완전 제거)
 # =========================================================
 
 kst_now = get_kst_now()
@@ -82,22 +82,6 @@ if "current_count" not in st.session_state:
 
 if "nav_selection" not in st.session_state:
     st.session_state.nav_selection = "⚡ 바로 기록하기"
-
-# 캘린더 날짜 클릭 시 탭 이동 처리 및 쿼리 파라미터 정리
-if "cal_date" in st.query_params:
-    try:
-        clicked_date_str = st.query_params["cal_date"]
-        if isinstance(clicked_date_str, list):
-            clicked_date_str = clicked_date_str[0]
-        st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
-        st.session_state.is_editing = False
-        st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-    except Exception:
-        pass
-    st.query_params.clear()
-elif st.query_params.get("tab") == "cal":
-    st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-    st.query_params.clear()
 
 
 # =========================================================
@@ -200,7 +184,7 @@ st.markdown(
 
 
     /* =====================================================
-        마크다운 제목 링크 차단 (캘린더 링크는 제외)
+        마크다운 제목 링크 차단
         ===================================================== */
 
     .stMarkdown a.header-anchor, 
@@ -490,7 +474,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (원래의 완벽한 아이폰 스타일 표 캘린더 복원)
+# 2. 캘린더 (URL 제거 + 네이티브 상태 통신 + 아이폰 UI 완벽 복원)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -517,115 +501,162 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 원래 디자인의 아이폰 스타일 표 캘린더 HTML/CSS 원본
-    cal_html = """
+    # [핵심] 모바일 세로 풀림 완벽 방지 및 아이폰 UI(동글동글 버튼, 요일 색상, 점) 복원 CSS
+    cal_css = """
     <style>
-    .iphone-table-container {
+    /* 1. 모바일에서 7열 컬럼(달력)이 세로로 깨지는 현상 강제 방지 (한 줄로 묶기) */
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(7)) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         width: 100% !important;
-        overflow-x: hidden !important;
+        margin-bottom: 8px !important;
+        gap: 0 !important;
     }
-    .iphone-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        table-layout: fixed !important;
-        margin-bottom: 15px !important;
-        background: transparent !important;
-        border: none !important;
-    }
-    .iphone-table th {
-        text-align: center !important;
-        font-weight: 500 !important;
-        padding: 6px 0 10px 0 !important;
-        font-size: 12px !important;
-        border: none !important;
-        background: transparent !important;
-    }
-    .iphone-table th:nth-child(1) { color: #ff3b30 !important; }
-    .iphone-table th:nth-child(7) { color: #007aff !important; }
-    .iphone-table th:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93 !important; }
-
-    .iphone-table td {
-        text-align: center !important;
-        padding: 6px 0 !important;
-        vertical-align: middle !important;
-        border: none !important;
-        background: transparent !important;
-    }
-
-    .iphone-cell {
-        display: inline-flex !important;
+    
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(7)) > [data-testid="column"] {
+        width: calc(100% / 7) !important;
+        flex: 1 1 calc(100% / 7) !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        justify-content: center !important;
+        gap: 0 !important;
+    }
+
+    /* 2. 달력 내부 불필요한 기본 여백 완전 제거 (밀착 레이아웃) */
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(7)) div.element-container {
+        margin-bottom: 0 !important;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* 3. 요일 헤더 텍스트 디자인 */
+    .cal-header {
+        text-align: center;
+        font-weight: 500;
+        font-size: 12px;
+        padding: 6px 0 10px 0;
+    }
+    .sun-text { color: #ff3b30; }
+    .sat-text { color: #007aff; }
+    .norm-text { color: #8e8e93; }
+
+    /* 4. 버튼 공통 스타일 (아이폰 원형 디자인 복원) */
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(7)) div[data-testid="stButton"] button {
         width: 34px !important;
         height: 34px !important;
-        background-color: transparent !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
         border-radius: 50% !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        background-color: transparent !important;
+        border: none !important;
         color: inherit !important;
-        text-decoration: none !important;
         font-size: 14px !important;
         font-weight: 400 !important;
-        margin: 0 auto !important;
-        pointer-events: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+        line-height: 1 !important;
     }
-    .iphone-cell:hover {
+
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(7)) div[data-testid="stButton"] button p {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(7)) div[data-testid="stButton"] button:hover {
         background-color: rgba(128, 128, 128, 0.2) !important;
     }
-    .iphone-cell.selected {
+
+    /* 5. 마커 기반 요일별 색상 연동 처리 (CSS 인접 형제 선택자 활용) */
+    div.element-container:has(.mark-sun) + div.element-container div[data-testid="stButton"] button p {
+        color: #ff3b30 !important;
+    }
+    div.element-container:has(.mark-sat) + div.element-container div[data-testid="stButton"] button p {
+        color: #007aff !important;
+    }
+
+    /* 6. 선택된 날짜 스타일 (빨간 배경, 흰 글자) */
+    div.element-container:has(.mark-sel) + div.element-container div[data-testid="stButton"] button {
         background-color: #ff3b30 !important;
         color: #ffffff !important;
         font-weight: bold !important;
     }
-    
-    .ios-sun { color: #ff3b30 !important; }
-    .ios-sat { color: #007aff !important; }
-    
-    .ios-dot {
-        width: 3px !important;
-        height: 3px !important;
-        background-color: #ff3b30 !important;
-        border-radius: 50% !important;
-        margin-top: 1px !important;
+    div.element-container:has(.mark-sel) + div.element-container div[data-testid="stButton"] button p {
+        color: #ffffff !important;
+        font-weight: bold !important;
     }
-    .iphone-cell.selected .ios-dot {
-        background-color: #ffffff !important;
+
+    /* 7. 기록 점(Dot) 마커 복원 */
+    .ios-dot {
+        width: 3px;
+        height: 3px;
+        background-color: #ff3b30;
+        border-radius: 50%;
+        margin: 0 auto;
+        margin-top: 1px;
+    }
+    .ios-dot.hidden {
+        visibility: hidden;
+    }
+    .ios-dot.selected-dot {
+        background-color: #ffffff;
+    }
+    .dot-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height: 10px;
     }
     </style>
-
-    <div class="iphone-table-container">
-    <table class='iphone-table'>
-        <thead>
-            <tr>
     """
-    for w in weekdays:
-        cal_html += f"<th>{w}</th>"
-    cal_html += "</tr></thead><tbody>"
+    st.markdown(cal_css, unsafe_allow_html=True)
 
+    # 요일 헤더 렌더링
+    head_cols = st.columns(7)
+    for idx, w in enumerate(weekdays):
+        cls_name = "sun-text" if idx == 0 else ("sat-text" if idx == 6 else "norm-text")
+        head_cols[idx].markdown(f"<div class='cal-header {cls_name}'>{w}</div>", unsafe_allow_html=True)
+
+    # 달력 날짜 렌더링
     for week in cal:
-        cal_html += "<tr>"
+        cols = st.columns(7)
         for day_idx, day in enumerate(week):
-            if day == 0:
-                cal_html += "<td></td>"
-            else:
-                cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
-                has_log = False
-                if not df_all.empty and "날짜" in df_all.columns:
-                    has_log = not df_all[df_all["날짜"] == cur_d_str].empty
-                
-                dot_html = "<div class='ios-dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
-                btn_cls = "iphone-cell selected" if cur_d_str == sel_date_str else "iphone-cell"
-                
-                day_cls = ""
-                if day_idx == 0:
-                    day_cls = " ios-sun"
-                elif day_idx == 6:
-                    day_cls = " ios-sat"
+            with cols[day_idx]:
+                if day != 0:
+                    cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
+                    has_log = False
+                    if not df_all.empty and "날짜" in df_all.columns:
+                        has_log = not df_all[df_all["날짜"] == cur_d_str].empty
+                    
+                    is_selected = (cur_d_str == sel_date_str)
+                    
+                    # 1. 스타일 연동용 투명 마커 삽입 (UI 상에서는 전혀 보이지 않음)
+                    marker = "mark-sel" if is_selected else ("mark-sun" if day_idx == 0 else ("mark-sat" if day_idx == 6 else "mark-norm"))
+                    st.markdown(f'<div class="{marker}" style="display:none;"></div>', unsafe_allow_html=True)
+                    
+                    # 2. 스트림릿 네이티브 버튼 (URL 이동이 없어 즉각적으로 부드럽게 작동)
+                    if st.button(str(day), key=f"btn_{cur_d_str}", use_container_width=True):
+                        st.session_state.selected_date = datetime.strptime(cur_d_str, "%Y-%m-%d").date()
+                        st.session_state.is_editing = False
+                        st.rerun()
 
-                cal_html += f"<td><a href='?cal_date={cur_d_str}&tab=cal' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
-        cal_html += "</tr>"
-    cal_html += "</tbody></table></div>"
+                    # 3. 기록 있음(Dot) 표시점
+                    dot_cls = "ios-dot selected-dot" if is_selected else "ios-dot"
+                    if not has_log:
+                        dot_cls += " hidden"
+                    st.markdown(f'<div class="dot-wrapper"><div class="{dot_cls}"></div></div>', unsafe_allow_html=True)
+                else:
+                    st.write("")
 
-    st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
 
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
