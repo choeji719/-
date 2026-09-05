@@ -120,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 모바일 좌우 스크롤 원천 차단 및 한 화면 맞춤 CSS 적용
+# 전체 앱 스타일 및 모바일 최적화 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -148,7 +148,7 @@ st.markdown(
 
 
     /* =====================================================
-       모바일 화면 좌우 밀림/스크롤 완벽 차단 (핵심)
+       모바일 화면 좌우 밀림/스크롤 완벽 차단
        ===================================================== */
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{
@@ -179,33 +179,6 @@ st.markdown(
 
 
     /* =====================================================
-       캘린더 7열 가로 고정 및 모바일 간격 최적화
-       ===================================================== */
-
-    [data-testid="stHorizontalBlock"] {{
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 2px !important;
-        width: 100% !important;
-    }}
-
-    [data-testid="column"] {{
-        flex: 1 1 0% !important;
-        min-width: 0 !important;
-        width: auto !important;
-    }}
-
-    [data-testid="column"] button {{
-        width: 100% !important;
-        padding: 6px 0px !important;
-        font-size: 11px !important;
-        min-height: 32px !important;
-        white-space: nowrap !important;
-    }}
-
-
-    /* =====================================================
        마크다운 제목 링크 차단
        ===================================================== */
 
@@ -221,7 +194,7 @@ st.markdown(
 
 
     /* =====================================================
-       제목 및 컨테이너
+       제목 및 컨테이너 스타일
        ===================================================== */
 
     .main-title {{
@@ -462,7 +435,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일 한 화면 밀림 방지 최적화)
+# 2. 캘린더 (모바일 완벽 호환 HTML 7열 그리드 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -484,137 +457,135 @@ elif nav == "📅 캘린더 (월간 보기)":
     else:
         df_all = pd.DataFrame(columns=["id", "날짜", "항목", "횟수", "메모", "시간"])
 
+    # URL 쿼리 파라미터로 날짜 클릭 감지
+    query_params = st.query_params
+    if "cal_date" in query_params:
+        try:
+            clicked_date_str = query_params["cal_date"]
+            if isinstance(clicked_date_str, list):
+                clicked_date_str = clicked_date_str[0]
+            st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
+            st.session_state.is_editing = False
+        except Exception:
+            pass
+
     cal = calendar.monthcalendar(selected_year, selected_month)
     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
-
-    # 요일 헤더 (가로 7열 강제)
-    cols = st.columns(7)
-    for i, day_name in enumerate(weekdays):
-        cols[i].markdown(
-            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 11px;'>{day_name}</div>",
-            unsafe_allow_html=True
-        )
-
-    st.markdown("<div style='margin-bottom: 2px;'></div>", unsafe_allow_html=True)
-
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 날짜 버튼 그리드 (가로 7열 강제)
+    # 모바일과 PC 모두에서 줄바꿈 없이 가로 7열로 딱 맞는 압축형 HTML 달력
+    cal_html = "<style>.ct{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:15px;}.ct th{text-align:center;font-weight:bold;color:#868e96;padding:8px 0;font-size:12px;}.ct td{text-align:center;padding:3px;vertical-align:middle;}.cb{display:block;width:100%;padding:10px 0;background-color:rgba(128,128,128,0.06);border:1px solid rgba(128,128,128,0.15);border-radius:6px;color:inherit;text-decoration:none;font-size:13px;font-weight:500;}.cb:hover{background-color:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.4);}.cb.selected{background-color:rgba(33,150,243,0.25);border-color:#2196F3;font-weight:bold;}</style><table class='ct'><thead><tr>"
+    for w in weekdays:
+        cal_html += f"<th>{w}</th>"
+    cal_html += "</tr></thead><tbody>"
+
     for week in cal:
-        cols = st.columns(7)
-        for i, day in enumerate(week):
+        cal_html += "<tr>"
+        for day in week:
             if day == 0:
-                cols[i].markdown("")
+                cal_html += "<td></td>"
             else:
-                current_date_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
-                
+                cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
-                    has_log = not df_all[df_all["날짜"] == current_date_str].empty
-                
-                btn_label = f"{day}•" if has_log else f"{day}"
-                if current_date_str == sel_date_str:
-                    btn_label = f"[{day}]" + ("•" if has_log else "")
+                    has_log = not df_all[df_all["날짜"] == cur_d_str].empty
+                dot = "•" if has_log else ""
+                btn_cls = "cb selected" if cur_d_str == sel_date_str else "cb"
+                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'>{day}{dot}</a></td>"
+        cal_html += "</tr>"
+    cal_html += "</tbody></table>"
 
-                if cols[i].button(btn_label, key=f"date_{current_date_str}", use_container_width=True):
-                    st.session_state.selected_date = date(
-                        selected_year,
-                        selected_month,
-                        day
-                    )
-                    st.session_state.is_editing = False
-                    st.rerun()
-
+    st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
 
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
 
-    with st.container():
-        st.markdown('<div class="popup-box">', unsafe_allow_html=True)
+    # 의미불명의 빈 박스(컨테이너)를 제거하고 깔끔하게 렌더링
+    st.markdown('<div class="popup-box">', unsafe_allow_html=True)
 
-        if not df_all.empty and "날짜" in df_all.columns:
-            df_target = df_all[df_all["날짜"] == sel_date_str]
-        else:
-            df_target = pd.DataFrame()
+    if not df_all.empty and "날짜" in df_all.columns:
+        df_target = df_all[df_all["날짜"] == sel_date_str]
+    else:
+        df_target = pd.DataFrame()
 
-        if not df_target.empty:
-            st.write("📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)")
-            selected_ids_to_delete = []
+    if not df_target.empty:
+        st.write("📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)")
+        selected_ids_to_delete = []
 
-            for _, row in df_target.iterrows():
-                time_str = row.get("시간", "시간 미상")
-                memo_str = row.get("메모", "없음")
-                row_id = row.get("id")
-                item_label = f"[{time_str}] {row['항목']}: {row['횟수']}회 (메모: {memo_str})"
+        for _, row in df_target.iterrows():
+            time_str = row.get("시간", "시간 미상")
+            memo_str = row.get("메모", "없음")
+            row_id = row.get("id")
+            item_label = f"[{time_str}] {row['항목']}: {row['횟수']}회 (메모: {memo_str})"
 
-                if st.checkbox(item_label, key=f"chk_{row_id}"):
-                    selected_ids_to_delete.append(row_id)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            if selected_ids_to_delete:
-                if st.button("🗑️ 선택한 기록 삭제", use_container_width=True):
-                    st.session_state.log_data = [
-                        item for item in st.session_state.log_data if item["id"] not in selected_ids_to_delete
-                    ]
-                    st.success("선택한 기록이 삭제되었습니다.")
-                    st.rerun()
-        else:
-            st.info("이 날짜에는 아직 기록이 없습니다.")
+            if st.checkbox(item_label, key=f"chk_{row_id}"):
+                selected_ids_to_delete.append(row_id)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        if not st.session_state.is_editing:
-            if st.button("✏️ 이 날짜에 기록 추가하기", use_container_width=True):
-                st.session_state.is_editing = True
+        if selected_ids_to_delete:
+            if st.button("🗑️ 선택한 기록 삭제", use_container_width=True):
+                st.session_state.log_data = [
+                    item for item in st.session_state.log_data if item["id"] not in selected_ids_to_delete
+                ]
+                st.success("선택한 기록이 삭제되었습니다.")
                 st.rerun()
-        else:
-            st.markdown("#### ➕ 과거 날짜 기록 추가")
-            with st.form(f"edit_form_{sel_date_str}", clear_on_submit=True):
-                add_category = st.selectbox(
-                    "항목",
-                    [
-                        "☕ 커피 마신 잔수",
-                        "💪 운동 횟수",
-                        "💊 영양제 뽀개기",
-                        "💧 물 마신 컵",
-                        "📚 책 읽은 페이지",
-                        "✨ 직접 입력"
-                    ]
-                )
-                if add_category == "✨ 직접 입력":
-                    add_category = st.text_input("직접 입력")
+    else:
+        st.info("이 날짜에는 아직 기록이 없습니다.")
 
-                add_count = st.number_input("횟수 / 양", min_value=1, value=1)
-                add_memo = st.text_input("메모")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-                col_sub1, col_sub2 = st.columns(2)
-                submit_added = col_sub1.form_submit_button("저장하기", use_container_width=True)
-                cancel_edit = col_sub2.form_submit_button("닫기", use_container_width=True)
+    if not st.session_state.is_editing:
+        if st.button("✏️ 이 날짜에 기록 추가하기", use_container_width=True):
+            st.session_state.is_editing = True
+            st.rerun()
+    else:
+        st.markdown("#### ➕ 과거 날짜 기록 추가")
+        with st.form(f"edit_form_{sel_date_str}", clear_on_submit=True):
+            add_category = st.selectbox(
+                "항목",
+                [
+                    "☕ 커피 마신 잔수",
+                    "💪 운동 횟수",
+                    "💊 영양제 뽀개기",
+                    "💧 물 마신 컵",
+                    "📚 책 읽은 페이지",
+                    "✨ 직접 입력"
+                ]
+            )
+            if add_category == "✨ 직접 입력":
+                add_category = st.text_input("직접 입력")
 
-                if submit_added:
-                    save_kst = get_kst_now()
-                    now_time = save_kst.strftime("%H:%M:%S")
-                    new_id = max([item["id"] for item in st.session_state.log_data]) + 1 if st.session_state.log_data else 1
+            add_count = st.number_input("횟수 / 양", min_value=1, value=1)
+            add_memo = st.text_input("메모")
 
-                    new_entry = {
-                        "id": new_id,
-                        "날짜": sel_date_str,
-                        "항목": add_category,
-                        "횟수": add_count,
-                        "메모": add_memo,
-                        "시간": now_time
-                    }
-                    st.session_state.log_data.append(new_entry)
-                    st.session_state.is_editing = False
-                    st.success("추가되었습니다!")
-                    st.rerun()
+            col_sub1, col_sub2 = st.columns(2)
+            submit_added = col_sub1.form_submit_button("저장하기", use_container_width=True)
+            cancel_edit = col_sub2.form_submit_button("닫기", use_container_width=True)
 
-                if cancel_edit:
-                    st.session_state.is_editing = False
-                    st.rerun()
+            if submit_added:
+                save_kst = get_kst_now()
+                now_time = save_kst.strftime("%H:%M:%S")
+                new_id = max([item["id"] for item in st.session_state.log_data]) + 1 if st.session_state.log_data else 1
 
-        st.markdown("</div>", unsafe_allow_html=True)
+                new_entry = {
+                    "id": new_id,
+                    "날짜": sel_date_str,
+                    "항목": add_category,
+                    "횟수": add_count,
+                    "메모": add_memo,
+                    "시간": now_time
+                }
+                st.session_state.log_data.append(new_entry)
+                st.session_state.is_editing = False
+                st.success("추가되었습니다!")
+                st.rerun()
+
+            if cancel_edit:
+                st.session_state.is_editing = False
+                st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # =========================================================
