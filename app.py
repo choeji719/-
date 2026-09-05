@@ -624,7 +624,6 @@ if nav == "⚡ 바로 기록하기":
                 "%H:%M:%S"
             )
 
-            # 새 고유 ID 생성 (가장 큰 id + 1)
             new_id = (
                 max([item["id"] for item in st.session_state.log_data]) + 1
                 if st.session_state.log_data
@@ -948,15 +947,17 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
         # -------------------------------------------------
-        # 기록 목록 및 삭제 기능
+        # 기록 목록 및 체크박스 선택 삭제 기능
         # -------------------------------------------------
 
         if not df_target.empty:
 
             st.write(
-                "📋 **이날의 기록 목록**"
+                "📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)"
             )
 
+            # 삭제할 id들을 담을 리스트
+            selected_ids_to_delete = []
 
             for _, row in df_target.iterrows():
 
@@ -965,34 +966,29 @@ elif nav == "📅 캘린더 (월간 보기)":
                     "시간 미상"
                 )
 
-
                 memo_str = row.get(
                     "메모",
                     "없음"
                 )
 
                 row_id = row.get("id")
+                item_label = f"[{time_str}] {row['항목']}: {row['횟수']}회 (메모: {memo_str})"
 
-                # 각 기록을 가로로 배치 (내용 | 삭제 버튼)
-                c_info, c_del = st.columns([4, 1])
+                # 체크박스로 선택하도록 구현
+                if st.checkbox(item_label, key=f"chk_{row_id}"):
+                    selected_ids_to_delete.append(row_id)
 
-                with c_info:
-                    st.text(
-                        f"[{time_str}] "
-                        f"{row['항목']}: "
-                        f"{row['횟수']}회 "
-                        f"(메모: {memo_str})"
-                    )
+            st.markdown("<br>", unsafe_allow_html=True)
 
-                with c_del:
-                    if st.button("🗑️ 삭제", key=f"del_{row_id}", use_container_width=True):
-                        # log_data에서 해당 id를 가진 항목 제거
-                        st.session_state.log_data = [
-                            item for item in st.session_state.log_data if item["id"] != row_id
-                        ]
-                        st.success("기록이 삭제되었습니다.")
-                        st.rerun()
-
+            # 선택된 항목이 있을 때만 삭제 버튼 활성화
+            if selected_ids_to_delete:
+                if st.button("🗑️ 선택한 기록 삭제", use_container_width=True):
+                    # 선택되지 않은 항목들만 남기고 필터링
+                    st.session_state.log_data = [
+                        item for item in st.session_state.log_data if item["id"] not in selected_ids_to_delete
+                    ]
+                    st.success("선택한 기록이 삭제되었습니다.")
+                    st.rerun()
 
         else:
 
