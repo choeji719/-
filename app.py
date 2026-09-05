@@ -434,7 +434,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일/PC 어디서나 완벽한 가로 7열 고정 HTML 캘린더)
+# 2. 캘린더 (단일 행 압축형 HTML 캘린더로 깨짐 방지)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -472,53 +472,8 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 완전 무결한 HTML 표 형태의 캘린더 렌더링
-    cal_html = """
-    <style>
-        .cal-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-bottom: 20px;
-        }
-        .cal-table th {
-            text-align: center;
-            font-weight: bold;
-            color: #868e96;
-            padding: 10px 0;
-            font-size: 14px;
-        }
-        .cal-table td {
-            text-align: center;
-            padding: 4px;
-            vertical-align: middle;
-        }
-        .cal-link {
-            display: block;
-            width: 100%;
-            padding: 12px 0;
-            background-color: rgba(128, 128, 128, 0.06);
-            border: 1px solid rgba(128, 128, 128, 0.15);
-            border-radius: 8px;
-            color: inherit;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .cal-link:hover {
-            background-color: rgba(33, 150, 243, 0.15);
-            border-color: rgba(33, 150, 243, 0.4);
-        }
-        .cal-link.selected {
-            background-color: rgba(33, 150, 243, 0.25);
-            border-color: #2196F3;
-            font-weight: bold;
-        }
-    </style>
-    <table class="cal-table">
-        <thead>
-            <tr>
-    """
+    # [핵심] 줄바꿈 공백 없이 단 한 줄로 작성된 압축 HTML 문자열
+    cal_html = "<style>.ct{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:20px;}.ct th{text-align:center;font-weight:bold;color:#868e96;padding:10px 0;font-size:14px;}.ct td{text-align:center;padding:4px;vertical-align:middle;}.cb{display:block;width:100%;padding:12px 0;background-color:rgba(128,128,128,0.06);border:1px solid rgba(128,128,128,0.15);border-radius:8px;color:inherit;text-decoration:none;font-size:14px;font-weight:500;}.cb:hover{background-color:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.4);}.cb.selected{background-color:rgba(33,150,243,0.25);border-color:#2196F3;font-weight:bold;}</style><table class='ct'><thead><tr>"
     for w in weekdays:
         cal_html += f"<th>{w}</th>"
     cal_html += "</tr></thead><tbody>"
@@ -533,13 +488,10 @@ elif nav == "📅 캘린더 (월간 보기)":
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
                     has_log = not df_all[df_all["날짜"] == cur_d_str].empty
-                
                 dot = " •" if has_log else ""
-                btn_class = "cal-link selected" if cur_d_str == sel_date_str else "cal-link"
-                
-                cal_html += f'<td><a href="?cal_date={cur_d_str}" target="_self" class="{btn_class}">{day}{dot}</a></td>'
+                btn_cls = "cb selected" if cur_d_str == sel_date_str else "cb"
+                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'>{day}{dot}</a></td>"
         cal_html += "</tr>"
-
     cal_html += "</tbody></table>"
 
     st.markdown(cal_html, unsafe_allow_html=True)
