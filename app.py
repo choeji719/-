@@ -120,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱에 현재 폰트 및 스타일 적용
+# 전체 앱에 현재 폰트 및 모바일 캘린더 가로 고정 강제 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -153,6 +153,32 @@ st.markdown(
 
     [data-testid="stSidebar"] {{
         display: none;
+    }}
+
+
+    /* =====================================================
+       [핵심 수정] 모바일 화면에서도 7개 컬럼이 절대 세로로 떨어지지 않고
+       한 줄에 가로로 나란히 고정되도록 Flex 강제 적용
+       ===================================================== */
+    [data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 2px !important;
+    }}
+
+    [data-testid="column"] {{
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }}
+
+    [data-testid="column"] button {{
+        width: 100% !important;
+        padding: 6px 0px !important;
+        font-size: 13px !important;
+        min-height: 36px !important;
+        white-space: nowrap !important;
     }}
 
 
@@ -214,7 +240,7 @@ st.markdown(
 
 
     /* =====================================================
-       Popover 내부 크기
+       Popover 내부 크기 및 아이콘 제거
        ===================================================== */
 
     [data-testid="stPopoverBody"] {{
@@ -222,21 +248,11 @@ st.markdown(
         max-width: 360px !important;
     }}
 
-
-    /* =====================================================
-       Popover의 아이콘 제거
-       ===================================================== */
-
     [data-testid="stPopover"] button svg,
     [data-testid="stPopover"] button [data-testid="stIconMaterial"],
     [data-testid="stPopover"] button span[class*="material-symbols"] {{
         display: none !important;
     }}
-
-
-    /* =====================================================
-       설정 버튼
-       ===================================================== */
 
     [data-testid="stPopover"] > button {{
         justify-content: center !important;
@@ -434,7 +450,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (단일 행 압축형 HTML 캘린더로 깨짐 방지)
+# 2. 캘린더 (모바일 가로 7열 강제 고정 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -456,45 +472,47 @@ elif nav == "📅 캘린더 (월간 보기)":
     else:
         df_all = pd.DataFrame(columns=["id", "날짜", "항목", "횟수", "메모", "시간"])
 
-    # URL 쿼리 파라미터로 날짜 클릭 감지
-    query_params = st.query_params
-    if "cal_date" in query_params:
-        try:
-            clicked_date_str = query_params["cal_date"]
-            if isinstance(clicked_date_str, list):
-                clicked_date_str = clicked_date_str[0]
-            st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
-            st.session_state.is_editing = False
-        except Exception:
-            pass
-
     cal = calendar.monthcalendar(selected_year, selected_month)
     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
+
+    # 요일 헤더 (가로 7열 강제)
+    cols = st.columns(7)
+    for i, day_name in enumerate(weekdays):
+        cols[i].markdown(
+            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 13px;'>{day_name}</div>",
+            unsafe_allow_html=True
+        )
+
+    st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
+
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # [핵심] 줄바꿈 공백 없이 단 한 줄로 작성된 압축 HTML 문자열
-    cal_html = "<style>.ct{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:20px;}.ct th{text-align:center;font-weight:bold;color:#868e96;padding:10px 0;font-size:14px;}.ct td{text-align:center;padding:4px;vertical-align:middle;}.cb{display:block;width:100%;padding:12px 0;background-color:rgba(128,128,128,0.06);border:1px solid rgba(128,128,128,0.15);border-radius:8px;color:inherit;text-decoration:none;font-size:14px;font-weight:500;}.cb:hover{background-color:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.4);}.cb.selected{background-color:rgba(33,150,243,0.25);border-color:#2196F3;font-weight:bold;}</style><table class='ct'><thead><tr>"
-    for w in weekdays:
-        cal_html += f"<th>{w}</th>"
-    cal_html += "</tr></thead><tbody>"
-
+    # 날짜 버튼 그리드 (가로 7열 강제)
     for week in cal:
-        cal_html += "<tr>"
-        for day in week:
+        cols = st.columns(7)
+        for i, day in enumerate(week):
             if day == 0:
-                cal_html += "<td></td>"
+                cols[i].markdown("")
             else:
-                cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
+                current_date_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
+                
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
-                    has_log = not df_all[df_all["날짜"] == cur_d_str].empty
-                dot = " •" if has_log else ""
-                btn_cls = "cb selected" if cur_d_str == sel_date_str else "cb"
-                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'>{day}{dot}</a></td>"
-        cal_html += "</tr>"
-    cal_html += "</tbody></table>"
+                    has_log = not df_all[df_all["날짜"] == current_date_str].empty
+                
+                btn_label = f"{day}•" if has_log else f"{day}"
+                if current_date_str == sel_date_str:
+                    btn_label = f"[{day}]" + ("•" if has_log else "")
 
-    st.markdown(cal_html, unsafe_allow_html=True)
+                if cols[i].button(btn_label, key=f"date_{current_date_str}", use_container_width=True):
+                    st.session_state.selected_date = date(
+                        selected_year,
+                        selected_month,
+                        day
+                    )
+                    st.session_state.is_editing = False
+                    st.rerun()
+
     st.markdown("---")
 
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
