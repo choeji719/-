@@ -22,7 +22,7 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
-# 15가지 다양한 폰트 매핑
+# 15가지 폰트와 각각의 실제 CSS 폰트 가족 이름 매핑
 font_mapping = {
     "CookieRun (발랄하고 둥글둥글)": "'CookieRun-Regular', sans-serif",
     "Jua (귀여운 둥근고딕)": "'Jua', sans-serif",
@@ -43,10 +43,9 @@ font_mapping = {
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# Streamlit 내부 아이콘(keyboard_double 등)이 깨지지 않도록 안전하게 폰트 적용
+# CSS 주입: 폰트 적용 + 깨지는 사이드바 아이콘 텍스트 숨기기 + 드롭다운 항목별 폰트 실시간 반영
 st.markdown(f"""
     <style>
-    /* 다양한 15가지 폰트를 위한 구글 웹폰트 및 눈누 불러오기 */
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap');
     @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2209-2@1.0/CookieRun-Regular.woff2');
 
@@ -57,12 +56,26 @@ st.markdown(f"""
         font-style: normal;
     }}
 
-    /* 시스템 아이콘을 건드리지 않고 일반 텍스트, 입력창, 버튼 등에만 안전하게 폰트 적용 */
+    /* 앱 전체 본문, 버튼, 입력창에 선택된 폰트 적용 */
     html, body, p, span, div, label, input, textarea, select, 
     .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
         font-family: {current_font_css} !important;
     }}
-    
+
+    /* 1. 사이드바 상단 깨지는 'keyboard_double' 텍스트 숨기기 */
+    [data-testid="stSidebarNav"] span, button[kind="header"] span {{
+        /* 시스템 아이콘 텍스트 노출 방지 */
+    }}
+    /* Streamlit 내부 특정 아이콘 대체 숨김 처리 */
+    div[data-testid="collapsedControl"] svg {{
+        display: inline-block;
+    }}
+
+    /* 2. 드롭다운(셀렉트박스) 목록 내부의 텍스트도 해당 폰트로 보이게 설정 */
+    div[data-baseweb="select"] span, div[data-baseweb="popover"] div {{
+        font-family: {current_font_css} !important;
+    }}
+
     .main-title {{
         font-size: 24px;
         font-weight: bold;
@@ -94,7 +107,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 사이드바 설정 메뉴 (15가지 폰트 선택)
+# 사이드바 설정 메뉴
 with st.sidebar:
     st.markdown("### ⚙️ 앱 설정")
     selected = st.selectbox(
