@@ -46,7 +46,18 @@ font_mapping = {
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# CSS 주입 및 폰트 미리보기 스타일 추가
+# ⭐ [해결 1] 드롭다운 리스트의 각 항목에 개별 폰트 스타일 적용 스크립트 생성
+font_preview_css = ""
+for idx, (font_name, font_css) in enumerate(font_mapping.items(), 1):
+    font_preview_css += f"""
+    ul[role="listbox"] li:nth-child({idx}),
+    ul[role="listbox"] li:nth-child({idx}) * {{
+        font-family: {font_css} !important;
+        font-size: 16px !important;
+    }}
+    """
+
+# CSS 주입
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap');
@@ -59,12 +70,23 @@ st.markdown(f"""
         font-style: normal;
     }}
 
-    /* 전체 앱에 선택된 폰트 적용 */
-    html, body, p, span, div, label, input, textarea, select, 
+    /* 앱 전체 기본 폰트 강제 적용 */
+    html, body, p, span, div, label, input, textarea, select, button,
     .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
         font-family: {current_font_css} !important;
     }}
     
+    /* ⭐ [해결 2] 'expand_more' 등 Material 아이콘 폰트 강제 복구 (글자 겹침 방지) */
+    .material-symbols-rounded,
+    .material-icons,
+    span[class*="material"],
+    i[class*="icon"] {{
+        font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+    }}
+
+    /* 설정 팝오버 등 내부 드롭다운 옵션 폰트 각자 다르게 적용 */
+    {font_preview_css}
+
     [data-testid="stSidebar"] {{
         display: none;
     }}
@@ -114,14 +136,6 @@ with top_col2:
             list(font_mapping.keys()), 
             index=list(font_mapping.keys()).index(st.session_state.selected_font)
         )
-        
-        # 선택한 폰트의 실제 모양을 미리 볼 수 있는 예시 박스 추가
-        preview_css = font_mapping.get(selected, "sans-serif")
-        st.markdown(f"""
-            <div style="padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); margin-top: 10px; text-align: center; font-family: {preview_css} !important;">
-                ✨ 폰트 미리보기: 모두의 기록
-            </div>
-        """, unsafe_allow_html=True)
 
         if selected != st.session_state.selected_font:
             st.session_state.selected_font = selected
