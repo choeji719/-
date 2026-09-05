@@ -157,22 +157,31 @@ st.markdown(
 
 
     /* =====================================================
-       데이터프레임(표) 상단 설정/메뉴(...) 툴바 숨기기
+       데이터프레임(표) 상단 설정/메뉴(...) 및 툴바 완전 숨기기
        ===================================================== */
 
-    [data-testid="stDataFrameToolbar"] {{
+    [data-testid="stDataFrameToolbar"],
+    div[data-testid="stElementToolbar"],
+    button[kind="headerButton"],
+    .qa-element-toolbar,
+    [data-testid="stElementToolbarButton"] {{
         display: none !important;
+        visibility: hidden !important;
     }}
 
 
     /* =====================================================
-       마크다운 제목/텍스트에 생기는 앵커 링크 아이콘 숨기기
+       마크다운 제목/텍스트에 생기는 앵커 링크 및 아이콘 완전 차단
        ===================================================== */
 
     .stMarkdown a.header-anchor, 
-    [data-testid="stMarkdownContainer"] a.anchor-link,
-    a[class*="anchor"] {{
+    [data-testid="stMarkdownContainer"] a,
+    h3 a,
+    h2 a,
+    h1 a,
+    a.anchor-link {{
         display: none !important;
+        pointer-events: none !important;
     }}
 
 
