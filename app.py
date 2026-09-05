@@ -224,17 +224,11 @@ st.markdown(
 
 
     /* =====================================================
-       Popover의 expand_more / expand_less 아이콘 제거
+       Popover의 아이콘 제거
        ===================================================== */
 
-    [data-testid="stPopover"] button svg {{
-        display: none !important;
-    }}
-
-    [data-testid="stPopover"] button [data-testid="stIconMaterial"] {{
-        display: none !important;
-    }}
-
+    [data-testid="stPopover"] button svg,
+    [data-testid="stPopover"] button [data-testid="stIconMaterial"],
     [data-testid="stPopover"] button span[class*="material-symbols"] {{
         display: none !important;
     }}
@@ -262,44 +256,12 @@ st.markdown(
     }}
 
 
-    /* =====================================================
-       현재 선택된 폰트
-       ===================================================== */
-
     .current-font {{
         background-color: rgba(128, 128, 128, 0.09);
-
         padding: 9px 12px;
-
         border-radius: 9px;
-
         margin-bottom: 12px;
-
         font-size: 14px;
-    }}
-
-
-    /* =====================================================
-       폰트 미리보기 라디오 영역
-       ===================================================== */
-
-    [data-testid="stPopoverBody"] [data-testid="stRadio"] > div {{
-        gap: 3px !important;
-    }}
-
-
-    [data-testid="stPopoverBody"] [data-testid="stRadio"] label {{
-        padding: 5px 8px !important;
-        border-radius: 8px !important;
-    }}
-
-
-    /* =====================================================
-       라디오 버튼 크기
-       ===================================================== */
-
-    [data-testid="stPopoverBody"] [data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] {{
-        font-size: 15px !important;
     }}
 
 
@@ -309,13 +271,9 @@ st.markdown(
 
     .popup-box {{
         background-color: rgba(128, 128, 128, 0.08);
-
         padding: 20px;
-
         border-radius: 15px;
-
         border: 1px solid rgba(128, 128, 128, 0.15);
-
         margin-top: 15px;
     }}
 
@@ -331,13 +289,7 @@ st.markdown(
 
 top_col1, top_col2 = st.columns([3, 1])
 
-
-# =========================================================
-# 화면 이동
-# =========================================================
-
 with top_col1:
-
     nav = st.radio(
         "화면 이동",
         [
@@ -348,115 +300,34 @@ with top_col1:
         label_visibility="collapsed"
     )
 
-
-# =========================================================
-# 설정 Popover
-# =========================================================
-
 with top_col2:
-
-    with st.popover(
-        "⚙️ 설정",
-        use_container_width=True
-    ):
-
-        st.markdown(
-            "### 🎨 앱 설정"
-        )
-
-
-        # -------------------------------------------------
-        # 현재 폰트
-        # -------------------------------------------------
-
+    with st.popover("⚙️ 설정", use_container_width=True):
+        st.markdown("### 🎨 앱 설정")
         st.markdown(
             f"""
-            <div
-                class="current-font"
-                style="font-family: {current_font_css} !important;"
-            >
-                현재 폰트:
-                <strong>
-                    {st.session_state.selected_font}
-                </strong>
+            <div class="current-font" style="font-family: {current_font_css} !important;">
+                현재 폰트: <strong>{st.session_state.selected_font}</strong>
             </div>
             """,
             unsafe_allow_html=True
         )
-
-
-        st.markdown(
-            '<div class="font-title">폰트 선택 (15종)</div>',
-            unsafe_allow_html=True
-        )
-
-
-        # -------------------------------------------------
-        # 폰트 선택
-        # -------------------------------------------------
-
+        st.markdown('<div class="font-title">폰트 선택 (15종)</div>', unsafe_allow_html=True)
+        
         font_names = list(font_mapping.keys())
-
-
-        selected_index = font_names.index(
-            st.session_state.selected_font
-        )
-
-
-        selected_font = st.radio(
-            "폰트",
-            font_names,
-            index=selected_index,
-            label_visibility="collapsed"
-        )
-
-
-        # -------------------------------------------------
-        # 선택이 변경되었으면 즉시 적용
-        # -------------------------------------------------
+        selected_index = font_names.index(st.session_state.selected_font)
+        selected_font = st.radio("폰트", font_names, index=selected_index, label_visibility="collapsed")
 
         if selected_font != st.session_state.selected_font:
-
             st.session_state.selected_font = selected_font
-
             st.rerun()
 
 
-# =========================================================
-# 라디오 각각에 자기 폰트 적용
-# =========================================================
-
+# 라디오 폰트 동적 적용
 radio_font_css = ""
+for i, font_css in enumerate(list(font_mapping.values())):
+    radio_font_css += f'[data-testid="stPopoverBody"] [data-testid="stRadio"] > div > label:nth-child({i + 1}) div[data-testid="stMarkdownContainer"] {{ font-family: {font_css} !important; }}\n'
 
-font_list = list(font_mapping.values())
-
-for i, font_css in enumerate(font_list):
-
-    radio_font_css += f"""
-    [data-testid="stPopoverBody"]
-    [data-testid="stRadio"]
-    > div
-    > label:nth-child({i + 1})
-    div[data-testid="stMarkdownContainer"] {{
-        font-family: {font_css} !important;
-    }}
-    """
-
-
-st.markdown(
-    f"""
-    <style>
-    {radio_font_css}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =========================================================
-# 구분선
-# =========================================================
-
+st.markdown(f"<style>{radio_font_css}</style>", unsafe_allow_html=True)
 st.markdown("---")
 
 
@@ -466,27 +337,11 @@ st.markdown("---")
 
 if nav == "⚡ 바로 기록하기":
 
-    st.markdown(
-        '<p class="main-title">⚡ 무엇을 기록할까요?</p>',
-        unsafe_allow_html=True
-    )
-
-
-    st.markdown(
-        '<p class="sub-desc">접속하자마자 1초 만에 기록하세요.</p>',
-        unsafe_allow_html=True
-    )
-
-
-    # -----------------------------------------------------
-    # 오늘 날짜 (KST 기준)
-    # -----------------------------------------------------
+    st.markdown('<p class="main-title">⚡ 무엇을 기록할까요?</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-desc">접속하자마자 1초 만에 기록하세요.</p>', unsafe_allow_html=True)
 
     current_kst = get_kst_now()
-    today_str = current_kst.strftime(
-        "%Y년 %m월 %d일 (%a)"
-    )
-
+    today_str = current_kst.strftime("%Y년 %m월 %d일 (%a)")
 
     st.markdown(
         f"""
@@ -497,16 +352,7 @@ if nav == "⚡ 바로 기록하기":
         unsafe_allow_html=True
     )
 
-
-    # -----------------------------------------------------
-    # 기록 폼
-    # -----------------------------------------------------
-
-    with st.form(
-        "quick_log_form",
-        clear_on_submit=False
-    ):
-
+    with st.form("quick_log_form", clear_on_submit=False):
         category = st.selectbox(
             "기록 항목",
             [
@@ -519,298 +365,98 @@ if nav == "⚡ 바로 기록하기":
             ]
         )
 
-
         if category == "✨ 직접 입력":
+            category = st.text_input("어떤 행동인가요?")
 
-            category = st.text_input(
-                "어떤 행동인가요?"
-            )
-
-
-        st.write(
-            "📊 횟수 / 양 선택"
-        )
-
+        st.write("📊 횟수 / 양 선택")
 
         count_input = st.number_input(
             "직접 입력",
             min_value=1,
-            value=int(
-                st.session_state.current_count
-            ),
+            value=int(st.session_state.current_count),
             step=1,
             label_visibility="collapsed"
         )
-
-
         st.session_state.current_count = count_input
-
-
-        # -------------------------------------------------
-        # 숫자 조절
-        # -------------------------------------------------
 
         c1, c2, c3, c4, c5 = st.columns(5)
 
-
-        if c1.form_submit_button(
-            "-10",
-            use_container_width=True
-        ):
-
-            st.session_state.current_count = max(
-                1,
-                st.session_state.current_count - 10
-            )
-
+        if c1.form_submit_button("-10", use_container_width=True):
+            st.session_state.current_count = max(1, st.session_state.current_count - 10)
             st.rerun()
-
-
-        if c2.form_submit_button(
-            "-5",
-            use_container_width=True
-        ):
-
-            st.session_state.current_count = max(
-                1,
-                st.session_state.current_count - 5
-            )
-
+        if c2.form_submit_button("-5", use_container_width=True):
+            st.session_state.current_count = max(1, st.session_state.current_count - 5)
             st.rerun()
-
-
-        if c3.form_submit_button(
-            "-1",
-            use_container_width=True
-        ):
-
-            st.session_state.current_count = max(
-                1,
-                st.session_state.current_count - 1
-            )
-
+        if c3.form_submit_button("-1", use_container_width=True):
+            st.session_state.current_count = max(1, st.session_state.current_count - 1)
             st.rerun()
-
-
-        if c4.form_submit_button(
-            "+5",
-            use_container_width=True
-        ):
-
+        if c4.form_submit_button("+5", use_container_width=True):
             st.session_state.current_count += 5
-
             st.rerun()
-
-
-        if c5.form_submit_button(
-            "+10",
-            use_container_width=True
-        ):
-
+        if c5.form_submit_button("+10", use_container_width=True):
             st.session_state.current_count += 10
-
             st.rerun()
 
-
-        # -------------------------------------------------
-        # 메모
-        # -------------------------------------------------
-
-        memo = st.text_input(
-            "메모 (선택)",
-            placeholder="특이사항 입력"
-        )
-
-
-        # -------------------------------------------------
-        # 저장
-        # -------------------------------------------------
-
-        submitted = st.form_submit_button(
-            "🚀 지금 바로 기록 저장",
-            use_container_width=True
-        )
-
+        memo = st.text_input("메모 (선택)", placeholder="특이사항 입력")
+        submitted = st.form_submit_button("🚀 지금 바로 기록 저장", use_container_width=True)
 
         if submitted:
-
             save_kst = get_kst_now()
-            now_time = save_kst.strftime(
-                "%H:%M:%S"
-            )
-
-            new_id = (
-                max([item["id"] for item in st.session_state.log_data]) + 1
-                if st.session_state.log_data
-                else 1
-            )
+            now_time = save_kst.strftime("%H:%M:%S")
+            new_id = max([item["id"] for item in st.session_state.log_data]) + 1 if st.session_state.log_data else 1
 
             new_entry = {
                 "id": new_id,
-                "날짜": save_kst.strftime(
-                    "%Y-%m-%d"
-                ),
-
+                "날짜": save_kst.strftime("%Y-%m-%d"),
                 "항목": category,
-
                 "횟수": st.session_state.current_count,
-
                 "메모": memo,
-
                 "시간": now_time
             }
-
-
-            st.session_state.log_data.append(
-                new_entry
-            )
-
-
-            st.success(
-                f"✅ 저장 완료! ({now_time})"
-            )
-
-
+            st.session_state.log_data.append(new_entry)
+            st.success(f"✅ 저장 완료! ({now_time})")
             st.session_state.current_count = 1
 
-
-    # =====================================================
-    # 오늘의 기록
-    # =====================================================
-
-    st.markdown(
-        "### 📋 오늘의 실시간 기록"
-    )
-
+    st.markdown("### 📋 오늘의 실시간 기록")
 
     if st.session_state.log_data:
-
-        df = pd.DataFrame(
-            st.session_state.log_data
-        )
-
-
-        today_date_str = get_kst_now().strftime(
-            "%Y-%m-%d"
-        )
-
-
-        df_today = df[
-            df["날짜"] == today_date_str
-        ]
-
+        df = pd.DataFrame(st.session_state.log_data)
+        today_date_str = get_kst_now().strftime("%Y-%m-%d")
+        df_today = df[df["날짜"] == today_date_str]
 
         if not df_today.empty:
-
-            display_df = df_today[
-                [
-                    "시간",
-                    "항목",
-                    "횟수",
-                    "메모"
-                ]
-            ].reset_index(drop=True)
-
-
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                hide_index=True
-            )
-
-
+            display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
+            st.dataframe(display_df, use_container_width=True, hide_index=True)
         else:
-
-            st.info(
-                "오늘 아직 기록된 내역이 없습니다."
-            )
-
-
+            st.info("오늘 아직 기록된 내역이 없습니다.")
     else:
-
-        st.info(
-            "첫 기록을 남겨보세요!"
-        )
+        st.info("첫 기록을 남겨보세요!")
 
 
 # =========================================================
-# 2. 캘린더 (모바일/PC 완벽 호환 고정 7열 HTML 캘린더)
+# 2. 캘린더 (모바일/PC 어디서나 완벽한 가로 7열 고정 HTML 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
 
-    st.markdown(
-        '<p class="main-title">📅 월간 캘린더</p>',
-        unsafe_allow_html=True
-    )
-
-
-    st.markdown(
-        '<p class="sub-desc">날짜를 클릭하여 해당 날의 기록을 확인하고 편집하세요.</p>',
-        unsafe_allow_html=True
-    )
-
-
-    # -----------------------------------------------------
-    # 연도 / 월 선택
-    # -----------------------------------------------------
+    st.markdown('<p class="main-title">📅 월간 캘린더</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-desc">날짜를 클릭하여 해당 날의 기록을 확인하고 편집하세요.</p>', unsafe_allow_html=True)
 
     col_y, col_m = st.columns(2)
 
-
     with col_y:
-
-        selected_year = st.selectbox(
-            "연도",
-            [
-                2026,
-                2025,
-                2024
-            ],
-            index=0
-        )
-
-
+        selected_year = st.selectbox("연도", [2026, 2025, 2024], index=0)
     with col_m:
-
-        selected_month = st.selectbox(
-            "월",
-            list(range(1, 13)),
-            index=get_kst_now().month - 1
-        )
-
+        selected_month = st.selectbox("월", list(range(1, 13)), index=get_kst_now().month - 1)
 
     st.markdown("---")
 
-
-    # -----------------------------------------------------
-    # 데이터 준비
-    # -----------------------------------------------------
-
     if st.session_state.log_data:
-
-        df_all = pd.DataFrame(
-            st.session_state.log_data
-        )
-
+        df_all = pd.DataFrame(st.session_state.log_data)
     else:
+        df_all = pd.DataFrame(columns=["id", "날짜", "항목", "횟수", "메모", "시간"])
 
-        df_all = pd.DataFrame(
-            columns=[
-                "id",
-                "날짜",
-                "항목",
-                "횟수",
-                "메모",
-                "시간"
-            ]
-        )
-
-
-    # -----------------------------------------------------
     # URL 쿼리 파라미터로 날짜 클릭 감지
-    # -----------------------------------------------------
-
     query_params = st.query_params
     if "cal_date" in query_params:
         try:
@@ -822,26 +468,60 @@ elif nav == "📅 캘린더 (월간 보기)":
         except Exception:
             pass
 
-
-    # -----------------------------------------------------
-    # 모바일에서도 절대 깨지지 않는 HTML 7열 캘린더 생성
-    # -----------------------------------------------------
-
-    cal = calendar.monthcalendar(
-        selected_year,
-        selected_month
-    )
-
+    cal = calendar.monthcalendar(selected_year, selected_month)
     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
+    sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # HTML 구조가 공백이나 줄바꿈 영향으로 텍스트로 노출되지 않도록 한 줄로 결합
-    cal_html = '<style>.c-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:15px;}.c-table th{text-align:center;font-weight:bold;color:#868e96;padding:8px 0;font-size:14px;}.c-table td{text-align:center;padding:3px;vertical-align:middle;}.c-btn{display:block;width:100%;padding:10px 0;background-color:rgba(128,128,128,0.06);border:1px solid rgba(128,128,128,0.15);border-radius:8px;color:inherit;text-decoration:none;font-size:14px;font-weight:500;}.c-btn:hover{background-color:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.4);}.c-btn.selected{background-color:rgba(33,150,243,0.25);border-color:#2196F3;font-weight:bold;}</style><table class="c-table"><thead><tr>'
-
+    # 완전 무결한 HTML 표 형태의 캘린더 렌더링
+    cal_html = """
+    <style>
+        .cal-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-bottom: 20px;
+        }
+        .cal-table th {
+            text-align: center;
+            font-weight: bold;
+            color: #868e96;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+        .cal-table td {
+            text-align: center;
+            padding: 4px;
+            vertical-align: middle;
+        }
+        .cal-link {
+            display: block;
+            width: 100%;
+            padding: 12px 0;
+            background-color: rgba(128, 128, 128, 0.06);
+            border: 1px solid rgba(128, 128, 128, 0.15);
+            border-radius: 8px;
+            color: inherit;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .cal-link:hover {
+            background-color: rgba(33, 150, 243, 0.15);
+            border-color: rgba(33, 150, 243, 0.4);
+        }
+        .cal-link.selected {
+            background-color: rgba(33, 150, 243, 0.25);
+            border-color: #2196F3;
+            font-weight: bold;
+        }
+    </style>
+    <table class="cal-table">
+        <thead>
+            <tr>
+    """
     for w in weekdays:
         cal_html += f"<th>{w}</th>"
     cal_html += "</tr></thead><tbody>"
-
-    sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
     for week in cal:
         cal_html += "<tr>"
@@ -850,13 +530,12 @@ elif nav == "📅 캘린더 (월간 보기)":
                 cal_html += "<td></td>"
             else:
                 cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
-                
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
                     has_log = not df_all[df_all["날짜"] == cur_d_str].empty
                 
                 dot = " •" if has_log else ""
-                btn_class = "c-btn selected" if cur_d_str == sel_date_str else "c-btn"
+                btn_class = "cal-link selected" if cur_d_str == sel_date_str else "cal-link"
                 
                 cal_html += f'<td><a href="?cal_date={cur_d_str}" target="_self" class="{btn_class}">{day}{dot}</a></td>'
         cal_html += "</tr>"
@@ -864,134 +543,52 @@ elif nav == "📅 캘린더 (월간 보기)":
     cal_html += "</tbody></table>"
 
     st.markdown(cal_html, unsafe_allow_html=True)
-
     st.markdown("---")
 
-
-    # -----------------------------------------------------
-    # 선택한 날짜 표시
-    # -----------------------------------------------------
-
-    st.markdown(
-        f"### 📌 선택한 날짜: {sel_date_str}"
-    )
-
-
-    # =====================================================
-    # 선택 날짜 기록 관리 박스
-    # =====================================================
+    st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
 
     with st.container():
+        st.markdown('<div class="popup-box">', unsafe_allow_html=True)
 
-        st.markdown(
-            '<div class="popup-box">',
-            unsafe_allow_html=True
-        )
-
-
-        if (
-            not df_all.empty
-            and "날짜" in df_all.columns
-        ):
-
-            df_target = df_all[
-                df_all["날짜"] == sel_date_str
-            ]
-
+        if not df_all.empty and "날짜" in df_all.columns:
+            df_target = df_all[df_all["날짜"] == sel_date_str]
         else:
-
             df_target = pd.DataFrame()
 
-
-        # -------------------------------------------------
-        # 기록 목록 및 체크박스 선택 삭제 기능
-        # -------------------------------------------------
-
         if not df_target.empty:
-
-            st.write(
-                "📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)"
-            )
-
-            # 삭제할 id들을 담을 리스트
+            st.write("📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)")
             selected_ids_to_delete = []
 
             for _, row in df_target.iterrows():
-
-                time_str = row.get(
-                    "시간",
-                    "시간 미상"
-                )
-
-                memo_str = row.get(
-                    "메모",
-                    "없음"
-                )
-
+                time_str = row.get("시간", "시간 미상")
+                memo_str = row.get("메모", "없음")
                 row_id = row.get("id")
                 item_label = f"[{time_str}] {row['항목']}: {row['횟수']}회 (메모: {memo_str})"
 
-                # 체크박스로 선택하도록 구현
                 if st.checkbox(item_label, key=f"chk_{row_id}"):
                     selected_ids_to_delete.append(row_id)
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # 선택된 항목이 있을 때만 삭제 버튼 활성화
             if selected_ids_to_delete:
                 if st.button("🗑️ 선택한 기록 삭제", use_container_width=True):
-                    # 선택되지 않은 항목들만 남기고 필터링
                     st.session_state.log_data = [
                         item for item in st.session_state.log_data if item["id"] not in selected_ids_to_delete
                     ]
                     st.success("선택한 기록이 삭제되었습니다.")
                     st.rerun()
-
         else:
+            st.info("이 날짜에는 아직 기록이 없습니다.")
 
-            st.info(
-                "이 날짜에는 아직 기록이 없습니다."
-            )
-
-
-        st.markdown(
-            "<br>",
-            unsafe_allow_html=True
-        )
-
-
-        # -------------------------------------------------
-        # 기록 추가
-        # -------------------------------------------------
+        st.markdown("<br>", unsafe_allow_html=True)
 
         if not st.session_state.is_editing:
-
-            if st.button(
-                "✏️ 이 날짜에 기록 추가하기",
-                use_container_width=True
-            ):
-
+            if st.button("✏️ 이 날짜에 기록 추가하기", use_container_width=True):
                 st.session_state.is_editing = True
-
                 st.rerun()
-
-
-        # -------------------------------------------------
-        # 과거 날짜 기록 추가
-        # -------------------------------------------------
-
         else:
-
-            st.markdown(
-                "#### ➕ 과거 날짜 기록 추가"
-            )
-
-
-            with st.form(
-                f"edit_form_{sel_date_str}",
-                clear_on_submit=True
-            ):
-
+            st.markdown("#### ➕ 과거 날짜 기록 추가")
+            with st.form(f"edit_form_{sel_date_str}", clear_on_submit=True):
                 add_category = st.selectbox(
                     "항목",
                     [
@@ -1003,104 +600,39 @@ elif nav == "📅 캘린더 (월간 보기)":
                         "✨ 직접 입력"
                     ]
                 )
-
-
                 if add_category == "✨ 직접 입력":
+                    add_category = st.text_input("직접 입력")
 
-                    add_category = st.text_input(
-                        "직접 입력"
-                    )
-
-
-                add_count = st.number_input(
-                    "횟수 / 양",
-                    min_value=1,
-                    value=1
-                )
-
-
-                add_memo = st.text_input(
-                    "메모"
-                )
-
+                add_count = st.number_input("횟수 / 양", min_value=1, value=1)
+                add_memo = st.text_input("메모")
 
                 col_sub1, col_sub2 = st.columns(2)
-
-
-                submit_added = col_sub1.form_submit_button(
-                    "저장하기",
-                    use_container_width=True
-                )
-
-
-                cancel_edit = col_sub2.form_submit_button(
-                    "닫기",
-                    use_container_width=True
-                )
-
-
-                # -----------------------------------------
-                # 저장
-                # -----------------------------------------
+                submit_added = col_sub1.form_submit_button("저장하기", use_container_width=True)
+                cancel_edit = col_sub2.form_submit_button("닫기", use_container_width=True)
 
                 if submit_added:
-
                     save_kst = get_kst_now()
-                    now_time = save_kst.strftime(
-                        "%H:%M:%S"
-                    )
-
-                    new_id = (
-                        max([item["id"] for item in st.session_state.log_data]) + 1
-                        if st.session_state.log_data
-                        else 1
-                    )
+                    now_time = save_kst.strftime("%H:%M:%S")
+                    new_id = max([item["id"] for item in st.session_state.log_data]) + 1 if st.session_state.log_data else 1
 
                     new_entry = {
                         "id": new_id,
                         "날짜": sel_date_str,
-
                         "항목": add_category,
-
                         "횟수": add_count,
-
                         "메모": add_memo,
-
                         "시간": now_time
                     }
-
-
-                    st.session_state.log_data.append(
-                        new_entry
-                    )
-
-
+                    st.session_state.log_data.append(new_entry)
                     st.session_state.is_editing = False
-
-
-                    st.success(
-                        "추가되었습니다!"
-                    )
-
-
+                    st.success("추가되었습니다!")
                     st.rerun()
-
-
-                # -----------------------------------------
-                # 닫기
-                # -----------------------------------------
 
                 if cancel_edit:
-
                     st.session_state.is_editing = False
-
                     st.rerun()
 
-
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 # =========================================================
@@ -1121,9 +653,4 @@ html_ad = """
     📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.
 </div>
 """
-
-
-st.markdown(
-    html_ad,
-    unsafe_allow_html=True
-)
+st.markdown(html_ad, unsafe_allow_html=True)
