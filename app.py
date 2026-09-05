@@ -6,9 +6,14 @@ import calendar
 # 페이지 설정
 st.set_page_config(page_title="모두의 기록 - 1초 간편 기록", page_icon="⚡", layout="centered")
 
-# 깔끔한 모바일 앱 감성 CSS
+# 깔끔한 모바일 앱 감성 및 폰트, 다크모드 배너 대응 CSS
 st.markdown("""
     <style>
+    /* 전체 앱에 깔끔한 모던 폰트 적용 */
+    html, body, [class*="css"] {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
     .main-title {
         font-size: 24px;
         font-weight: bold;
@@ -19,21 +24,25 @@ st.markdown("""
         font-size: 13px;
         margin-bottom: 15px;
     }
+    
+    /* 라이트/다크 모드 모두에서 눈부시지 않은 차분한 오늘 날짜 배너 */
     .today-banner {
-        background-color: #e7f5ff;
-        color: #1971c2;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-weight: bold;
+        background-color: rgba(33, 150, 243, 0.12);
+        color: inherit;
+        padding: 12px 15px;
+        border-radius: 10px;
+        font-weight: 600;
         font-size: 15px;
         margin-bottom: 20px;
         text-align: center;
+        border: 1px solid rgba(33, 150, 243, 0.2);
     }
+    
     .popup-box {
-        background-color: #f8f9fa;
+        background-color: rgba(128, 128, 128, 0.08);
         padding: 20px;
         border-radius: 12px;
-        border: 1px solid #e9ecef;
+        border: 1px solid rgba(128, 128, 128, 0.15);
         margin-top: 15px;
     }
     </style>
@@ -56,12 +65,12 @@ if 'is_editing' not in st.session_state:
 nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
-# 1. 바로 기록하기 화면 (오늘 날짜 고정 및 퀵 조절 버튼 적용)
+# 1. 바로 기록하기 화면
 if nav == "⚡ 바로 기록하기":
     st.markdown('<p class="main-title">⚡ 무엇을 기록할까요?</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-desc">접속하자마자 1초 만에 기록하세요.</p>', unsafe_allow_html=True)
 
-    # 오늘 날짜 안내 배너
+    # 오늘 날짜 안내 배너 (눈부심 방지 적용)
     today_str = datetime.now().strftime("%Y년 %m월 %d일 (%a)")
     st.markdown(f'<div class="today-banner">📅 오늘 날짜: {today_str}</div>', unsafe_allow_html=True)
 
@@ -122,7 +131,6 @@ if nav == "⚡ 바로 기록하기":
         df_today = df[df["날짜"] == today_date_str]
         
         if not df_today.empty:
-            # 먼저 기록한 것이 위로 오도록 정렬 (역순 정렬 제거)
             display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
             st.dataframe(display_df, use_container_width=True)
         else:
@@ -148,7 +156,7 @@ elif nav == "📅 캘린더 (월간 보기)":
     
     cols = st.columns(7)
     for i, day_name in enumerate(weekdays):
-        cols[i].markdown(f"<div style='text-align: center; font-weight: bold; color: #6c757d;'>{day_name}</div>", unsafe_allow_html=True)
+        cols[i].markdown(f"<div style='text-align: center; font-weight: bold; color: #868e96;'>{day_name}</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -231,7 +239,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 # 하단 광고 영역
 html_ad = """
-<div style="background-color: #f1f3f5; padding: 15px; border-radius: 8px; text-align: center; color: #868e96; font-size: 13px; margin-top: 30px;">
+<div style="background-color: rgba(128, 128, 128, 0.08); padding: 15px; border-radius: 8px; text-align: center; color: #868e96; font-size: 13px; margin-top: 30px; border: 1px dashed rgba(128, 128, 128, 0.2);">
     📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.
 </div>
 """
