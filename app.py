@@ -139,7 +139,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 모바일 좌우 밀림 완전 차단 CSS 적용
+# 전체 앱 스타일 및 부드러운 전환(Fade) 효과 적용
 # =========================================================
 
 st.markdown(
@@ -167,7 +167,7 @@ st.markdown(
 
 
     /* =====================================================
-        모바일 화면 좌우 밀림/스크롤 완벽 차단
+        모바일 화면 좌우 밀림/스크롤 완벽 차단 및 부드러운 등장
         ===================================================== */
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {{
@@ -177,6 +177,8 @@ st.markdown(
         box-sizing: border-box !important;
         margin: 0 !important;
         padding: 0 !important;
+        opacity: 1;
+        transition: opacity 0.2s ease-in-out;
     }}
 
     .block-container {{
@@ -490,7 +492,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (아이폰 스타일 표 캘린더 & 탭 유지)
+# 2. 캘린더 (아이폰 스타일 표 캘린더 & 부드러운 전환 인터랙션)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -517,7 +519,7 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 아이폰 스타일 캘린더 디자인 원본 CSS
+    # 아이폰 스타일 캘린더 디자인 원본 CSS 및 깜빡임 방지 페이드 아웃 스크립트
     cal_html = """
     <style>
     .iphone-table-container {
@@ -621,9 +623,20 @@ elif nav == "📅 캘린더 (월간 보기)":
                 elif day_idx == 6:
                     day_cls = " ios-sat"
 
-                cal_html += f"<td><a href='?cal_date={cur_d_str}&tab=cal' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
+                cal_html += f"<td><a href='?cal_date={cur_d_str}&tab=cal' target='_self' class='{btn_cls}' id='date_{cur_d_str}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
         cal_html += "</tr>"
     cal_html += "</tbody></table></div>"
+
+    # 날짜 클릭 시 하얀 화면 깜빡임 대신 부드럽게 페이드아웃 되도록 가려주는 자바스크립트
+    cal_html += """
+    <script>
+    document.querySelectorAll('.iphone-cell').forEach(function(cell) {
+        cell.addEventListener('click', function(e) {
+            document.body.style.opacity = '0';
+        });
+    });
+    </script>
+    """
 
     st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
