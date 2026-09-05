@@ -4,9 +4,11 @@ from datetime import datetime, date
 import calendar
 from zoneinfo import ZoneInfo
 
+
 # 한국 시간(KST) 기준 현재 시간 가져오기 함수
 def get_kst_now():
     return datetime.now(ZoneInfo("Asia/Seoul"))
+
 
 # =========================================================
 # 페이지 설정
@@ -43,7 +45,7 @@ font_mapping = {
 
 
 # =========================================================
-# 세션 스테이트 초기화 및 쿼리 파라미터 처리
+# 세션 스테이트 초기화
 # =========================================================
 
 kst_now = get_kst_now()
@@ -82,22 +84,6 @@ if "current_count" not in st.session_state:
 
 if "nav_selection" not in st.session_state:
     st.session_state.nav_selection = "⚡ 바로 기록하기"
-
-# 캘린더 날짜 클릭 시 탭 이동 처리 및 쿼리 파라미터 정리
-if "cal_date" in st.query_params:
-    try:
-        clicked_date_str = st.query_params["cal_date"]
-        if isinstance(clicked_date_str, list):
-            clicked_date_str = clicked_date_str[0]
-        st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
-        st.session_state.is_editing = False
-        st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-    except Exception:
-        pass
-    st.query_params.clear()
-elif st.query_params.get("tab") == "cal":
-    st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-    st.query_params.clear()
 
 
 # =========================================================
@@ -139,7 +125,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 모바일 좌우 밀림 완전 차단 CSS 적용
+# 전체 앱 스타일
 # =========================================================
 
 st.markdown(
@@ -167,17 +153,23 @@ st.markdown(
 
 
     /* =====================================================
-        모바일 화면 좌우 밀림/스크롤 완벽 차단
-        ===================================================== */
+       모바일 화면 좌우 밀림/스크롤 완벽 차단
+       ===================================================== */
 
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {{
+    html,
+    body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    .main {{
         width: 100% !important;
         max-width: 100vw !important;
         overflow-x: hidden !important;
         box-sizing: border-box !important;
         margin: 0 !important;
         padding: 0 !important;
+        opacity: 1 !important;
     }}
+
 
     .block-container {{
         max-width: 100% !important;
@@ -191,8 +183,8 @@ st.markdown(
 
 
     /* =====================================================
-        사이드바 제거
-        ===================================================== */
+       사이드바 제거
+       ===================================================== */
 
     [data-testid="stSidebar"] {{
         display: none;
@@ -200,10 +192,10 @@ st.markdown(
 
 
     /* =====================================================
-        마크다운 제목 링크 차단 (캘린더 링크는 제외)
-        ===================================================== */
+       마크다운 제목 링크 차단
+       ===================================================== */
 
-    .stMarkdown a.header-anchor, 
+    .stMarkdown a.header-anchor,
     h3 a,
     h2 a,
     h1 a,
@@ -214,8 +206,8 @@ st.markdown(
 
 
     /* =====================================================
-        제목 및 컨테이너 스타일
-        ===================================================== */
+       제목 및 컨테이너 스타일
+       ===================================================== */
 
     .main-title {{
         font-size: 20px;
@@ -245,19 +237,21 @@ st.markdown(
 
 
     /* =====================================================
-        Popover 내부 크기 및 아이콘 제거
-        ===================================================== */
+       Popover 내부 크기 및 아이콘 제거
+       ===================================================== */
 
     [data-testid="stPopoverBody"] {{
         width: 300px !important;
         max-width: 90vw !important;
     }}
 
+
     [data-testid="stPopover"] button svg,
     [data-testid="stPopover"] button [data-testid="stIconMaterial"],
     [data-testid="stPopover"] button span[class*="material-symbols"] {{
         display: none !important;
     }}
+
 
     [data-testid="stPopover"] > button {{
         justify-content: center !important;
@@ -266,8 +260,8 @@ st.markdown(
 
 
     /* =====================================================
-        폰트 선택 영역
-        ===================================================== */
+       폰트 선택 영역
+       ===================================================== */
 
     .font-title {{
         font-size: 13px;
@@ -283,6 +277,144 @@ st.markdown(
         border-radius: 8px;
         margin-bottom: 10px;
         font-size: 13px;
+    }}
+
+
+    /* =====================================================
+       아이폰 스타일 캘린더
+       ===================================================== */
+
+    .calendar-header {{
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        margin-bottom: 2px;
+    }}
+
+    .calendar-header-day {{
+        text-align: center;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 6px 0 10px 0;
+    }}
+
+    .calendar-header-day.sun {{
+        color: #ff3b30;
+    }}
+
+    .calendar-header-day.sat {{
+        color: #007aff;
+    }}
+
+    .calendar-header-day.weekday {{
+        color: #8e8e93;
+    }}
+
+
+    /* 날짜 버튼이 들어가는 각각의 Streamlit column */
+    div[data-testid="column"]:has(button[key^="calendar_date_"]) {{
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }}
+
+
+    /* 캘린더 날짜 버튼 */
+    button[key^="calendar_date_"] {{
+        width: 34px !important;
+        min-width: 34px !important;
+        max-width: 34px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+
+        padding: 0 !important;
+        margin: 0 auto !important;
+
+        border: none !important;
+        border-radius: 50% !important;
+
+        background: transparent !important;
+        box-shadow: none !important;
+
+        color: inherit !important;
+
+        font-size: 14px !important;
+        font-weight: 400 !important;
+
+        line-height: 34px !important;
+    }}
+
+
+    button[key^="calendar_date_"]:hover {{
+        background-color: rgba(128, 128, 128, 0.20) !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
+
+    button[key^="calendar_date_"]:focus {{
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
+
+    /* =====================================================
+       캘린더 날짜 숫자 색상
+       ===================================================== */
+
+    button[key^="calendar_date_sun_"] {{
+        color: #ff3b30 !important;
+    }}
+
+    button[key^="calendar_date_sat_"] {{
+        color: #007aff !important;
+    }}
+
+
+    /* =====================================================
+       선택된 날짜
+       ===================================================== */
+
+    button[key^="calendar_selected_"] {{
+        background-color: #ff3b30 !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }}
+
+    button[key^="calendar_selected_"]:hover {{
+        background-color: #ff3b30 !important;
+        color: #ffffff !important;
+    }}
+
+
+    /* =====================================================
+       기록이 있는 날짜 표시용 점
+       ===================================================== */
+
+    .calendar-dot {{
+        width: 3px;
+        height: 3px;
+        background-color: #ff3b30;
+        border-radius: 50%;
+        margin: -8px auto 0 auto;
+    }}
+
+
+    .calendar-empty-dot {{
+        width: 3px;
+        height: 3px;
+        margin: -8px auto 0 auto;
+        visibility: hidden;
+    }}
+
+
+    /* =====================================================
+       캘린더 행 간격
+       ===================================================== */
+
+    .calendar-row-spacer {{
+        height: 2px;
     }}
 
     </style>
@@ -311,7 +443,9 @@ with top_col1:
 
 with top_col2:
     with st.popover("⚙️ 설정", use_container_width=True):
+
         st.markdown("### 🎨 앱 설정")
+
         st.markdown(
             f"""
             <div class="current-font" style="font-family: {current_font_css} !important;">
@@ -320,23 +454,50 @@ with top_col2:
             """,
             unsafe_allow_html=True
         )
-        st.markdown('<div class="font-title">폰트 선택 (15종)</div>', unsafe_allow_html=True)
-        
+
+        st.markdown(
+            '<div class="font-title">폰트 선택 (15종)</div>',
+            unsafe_allow_html=True
+        )
+
         font_names = list(font_mapping.keys())
-        selected_index = font_names.index(st.session_state.selected_font)
-        selected_font = st.radio("폰트", font_names, index=selected_index, label_visibility="collapsed")
+        selected_index = font_names.index(
+            st.session_state.selected_font
+        )
+
+        selected_font = st.radio(
+            "폰트",
+            font_names,
+            index=selected_index,
+            label_visibility="collapsed"
+        )
 
         if selected_font != st.session_state.selected_font:
             st.session_state.selected_font = selected_font
             st.rerun()
 
 
+# =========================================================
 # 라디오 폰트 동적 적용
-radio_font_css = ""
-for i, font_css in enumerate(list(font_mapping.values())):
-    radio_font_css += f'[data-testid="stPopoverBody"] [data-testid="stRadio"] > div > label:nth-child({i + 1}) div[data-testid="stMarkdownContainer"] {{ font-family: {font_css} !important; }}\n'
+# =========================================================
 
-st.markdown(f"<style>{radio_font_css}</style>", unsafe_allow_html=True)
+radio_font_css = ""
+
+for i, font_css in enumerate(list(font_mapping.values())):
+
+    radio_font_css += (
+        f'[data-testid="stPopoverBody"] '
+        f'[data-testid="stRadio"] > div > '
+        f'label:nth-child({i + 1}) '
+        f'div[data-testid="stMarkdownContainer"] '
+        f'{{ font-family: {font_css} !important; }}\n'
+    )
+
+st.markdown(
+    f"<style>{radio_font_css}</style>",
+    unsafe_allow_html=True
+)
+
 st.markdown("---")
 
 
@@ -346,8 +507,15 @@ st.markdown("---")
 
 if nav == "⚡ 바로 기록하기":
 
-    st.markdown('<p class="main-title">⚡ 무엇을 기록할까요?</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-desc">접속하자마자 1초 만에 기록하세요.</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="main-title">⚡ 무엇을 기록할까요?</p>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<p class="sub-desc">접속하자마자 1초 만에 기록하세요.</p>',
+        unsafe_allow_html=True
+    )
 
     current_kst = get_kst_now()
     today_str = current_kst.strftime("%Y년 %m월 %d일 (%a)")
@@ -361,7 +529,9 @@ if nav == "⚡ 바로 기록하기":
         unsafe_allow_html=True
     )
 
+
     with st.form("quick_log_form", clear_on_submit=False):
+
         category = st.selectbox(
             "기록 항목",
             [
@@ -377,7 +547,9 @@ if nav == "⚡ 바로 기록하기":
         if category == "✨ 직접 입력":
             category = st.text_input("어떤 행동인가요?")
 
+
         st.write("📊 횟수 / 양 선택")
+
 
         count_input = st.number_input(
             "직접 입력",
@@ -386,33 +558,87 @@ if nav == "⚡ 바로 기록하기":
             step=1,
             label_visibility="collapsed"
         )
+
         st.session_state.current_count = count_input
+
 
         c1, c2, c3, c4, c5 = st.columns(5)
 
-        if c1.form_submit_button("-10", use_container_width=True):
-            st.session_state.current_count = max(1, st.session_state.current_count - 10)
+
+        if c1.form_submit_button(
+            "-10",
+            use_container_width=True
+        ):
+            st.session_state.current_count = max(
+                1,
+                st.session_state.current_count - 10
+            )
             st.rerun()
-        if c2.form_submit_button("-5", use_container_width=True):
-            st.session_state.current_count = max(1, st.session_state.current_count - 5)
+
+
+        if c2.form_submit_button(
+            "-5",
+            use_container_width=True
+        ):
+            st.session_state.current_count = max(
+                1,
+                st.session_state.current_count - 5
+            )
             st.rerun()
-        if c3.form_submit_button("-1", use_container_width=True):
-            st.session_state.current_count = max(1, st.session_state.current_count - 1)
+
+
+        if c3.form_submit_button(
+            "-1",
+            use_container_width=True
+        ):
+            st.session_state.current_count = max(
+                1,
+                st.session_state.current_count - 1
+            )
             st.rerun()
-        if c4.form_submit_button("+5", use_container_width=True):
+
+
+        if c4.form_submit_button(
+            "+5",
+            use_container_width=True
+        ):
             st.session_state.current_count += 5
             st.rerun()
-        if c5.form_submit_button("+10", use_container_width=True):
+
+
+        if c5.form_submit_button(
+            "+10",
+            use_container_width=True
+        ):
             st.session_state.current_count += 10
             st.rerun()
 
-        memo = st.text_input("메모 (선택)", placeholder="특이사항 입력")
-        submitted = st.form_submit_button("🚀 지금 바로 기록 저장", use_container_width=True)
+
+        memo = st.text_input(
+            "메모 (선택)",
+            placeholder="특이사항 입력"
+        )
+
+        submitted = st.form_submit_button(
+            "🚀 지금 바로 기록 저장",
+            use_container_width=True
+        )
+
 
         if submitted:
+
             save_kst = get_kst_now()
+
             now_time = save_kst.strftime("%H:%M:%S")
-            new_id = max([item["id"] for item in st.session_state.log_data]) + 1 if st.session_state.log_data else 1
+
+            new_id = (
+                max(
+                    [item["id"] for item in st.session_state.log_data]
+                ) + 1
+                if st.session_state.log_data
+                else 1
+            )
+
 
             new_entry = {
                 "id": new_id,
@@ -422,26 +648,50 @@ if nav == "⚡ 바로 기록하기":
                 "메모": memo,
                 "시간": now_time
             }
+
+
             st.session_state.log_data.append(new_entry)
-            st.success(f"✅ 저장 완료! ({now_time})")
+
+            st.success(
+                f"✅ 저장 완료! ({now_time})"
+            )
+
             st.session_state.current_count = 1
+
 
     st.markdown("### 📋 오늘의 실시간 기록")
 
+
     if st.session_state.log_data:
-        df = pd.DataFrame(st.session_state.log_data)
-        today_date_str = get_kst_now().strftime("%Y-%m-%d")
-        df_today = df[df["날짜"] == today_date_str]
+
+        df = pd.DataFrame(
+            st.session_state.log_data
+        )
+
+        today_date_str = get_kst_now().strftime(
+            "%Y-%m-%d"
+        )
+
+        df_today = df[
+            df["날짜"] == today_date_str
+        ]
+
 
         if not df_today.empty:
-            display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
-            
+
+            display_df = df_today[
+                ["시간", "항목", "횟수", "메모"]
+            ].reset_index(drop=True)
+
+
             table_html = """
             <style>
+
             .log-table-container {
                 width: 100% !important;
                 overflow-x: hidden !important;
             }
+
             .log-table {
                 width: 100% !important;
                 border-collapse: collapse !important;
@@ -450,6 +700,7 @@ if nav == "⚡ 바로 기록하기":
                 margin-bottom: 10px !important;
                 font-size: 13px !important;
             }
+
             .log-table th {
                 background-color: rgba(128, 128, 128, 0.12);
                 padding: 8px 4px;
@@ -458,15 +709,20 @@ if nav == "⚡ 바로 기록하기":
                 font-weight: bold;
                 word-break: break-all;
             }
+
             .log-table td {
                 padding: 8px 4px;
                 text-align: center;
                 border-bottom: 1px solid rgba(128, 128, 128, 0.1);
                 word-break: break-all;
             }
+
             </style>
+
             <div class="log-table-container">
+
             <table class='log-table'>
+
                 <thead>
                     <tr>
                         <th style="width: 25%;">시간</th>
@@ -475,200 +731,462 @@ if nav == "⚡ 바로 기록하기":
                         <th style="width: 25%;">메모</th>
                     </tr>
                 </thead>
+
                 <tbody>
             """
+
+
             for _, row in display_df.iterrows():
-                memo_val = row['메모'] if row['메모'] else '-'
-                table_html += f"<tr><td>{row['시간']}</td><td>{row['항목']}</td><td>{row['횟수']}회</td><td>{memo_val}</td></tr>"
-            table_html += "</tbody></table></div>"
-            
-            st.markdown(table_html, unsafe_allow_html=True)
+
+                memo_val = (
+                    row["메모"]
+                    if row["메모"]
+                    else "-"
+                )
+
+                table_html += (
+                    f"<tr>"
+                    f"<td>{row['시간']}</td>"
+                    f"<td>{row['항목']}</td>"
+                    f"<td>{row['횟수']}회</td>"
+                    f"<td>{memo_val}</td>"
+                    f"</tr>"
+                )
+
+
+            table_html += """
+                </tbody>
+            </table>
+            </div>
+            """
+
+
+            st.markdown(
+                table_html,
+                unsafe_allow_html=True
+            )
+
+
         else:
-            st.info("오늘 아직 기록된 내역이 없습니다.")
+
+            st.info(
+                "오늘 아직 기록된 내역이 없습니다."
+            )
+
+
     else:
-        st.info("첫 기록을 남겨보세요!")
+
+        st.info(
+            "첫 기록을 남겨보세요!"
+        )
 
 
 # =========================================================
-# 2. 캘린더 (원래의 완벽한 아이폰 스타일 표 캘린더 복원)
+# 2. 캘린더
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
 
-    st.markdown('<p class="main-title">📅 월간 캘린더</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-desc">날짜를 클릭하여 해당 날의 기록을 확인하고 편집하세요.</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="main-title">📅 월간 캘린더</p>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<p class="sub-desc">날짜를 클릭하여 해당 날의 기록을 확인하고 편집하세요.</p>',
+        unsafe_allow_html=True
+    )
+
 
     col_y, col_m = st.columns(2)
 
+
     with col_y:
-        selected_year = st.selectbox("연도", [2026, 2025, 2024], index=0)
+
+        selected_year = st.selectbox(
+            "연도",
+            [2026, 2025, 2024],
+            index=0
+        )
+
+
     with col_m:
-        selected_month = st.selectbox("월", list(range(1, 13)), index=get_kst_now().month - 1)
+
+        selected_month = st.selectbox(
+            "월",
+            list(range(1, 13)),
+            index=get_kst_now().month - 1
+        )
+
 
     st.markdown("---")
+
 
     if st.session_state.log_data:
-        df_all = pd.DataFrame(st.session_state.log_data)
+
+        df_all = pd.DataFrame(
+            st.session_state.log_data
+        )
+
     else:
-        df_all = pd.DataFrame(columns=["id", "날짜", "항목", "횟수", "메모", "시간"])
 
-    cal_obj = calendar.TextCalendar(firstweekday=6)
-    cal = cal_obj.monthdayscalendar(selected_year, selected_month)
-    weekdays = ["일", "월", "화", "수", "목", "금", "토"]
-    sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
+        df_all = pd.DataFrame(
+            columns=[
+                "id",
+                "날짜",
+                "항목",
+                "횟수",
+                "메모",
+                "시간"
+            ]
+        )
 
-    # 원래 디자인의 아이폰 스타일 표 캘린더 HTML/CSS 원본
-    cal_html = """
-    <style>
-    .iphone-table-container {
-        width: 100% !important;
-        overflow-x: hidden !important;
-    }
-    .iphone-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        table-layout: fixed !important;
-        margin-bottom: 15px !important;
-        background: transparent !important;
-        border: none !important;
-    }
-    .iphone-table th {
-        text-align: center !important;
-        font-weight: 500 !important;
-        padding: 6px 0 10px 0 !important;
-        font-size: 12px !important;
-        border: none !important;
-        background: transparent !important;
-    }
-    .iphone-table th:nth-child(1) { color: #ff3b30 !important; }
-    .iphone-table th:nth-child(7) { color: #007aff !important; }
-    .iphone-table th:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93 !important; }
 
-    .iphone-table td {
-        text-align: center !important;
-        padding: 6px 0 !important;
-        vertical-align: middle !important;
-        border: none !important;
-        background: transparent !important;
-    }
+    cal_obj = calendar.TextCalendar(
+        firstweekday=6
+    )
 
-    .iphone-cell {
-        display: inline-flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 34px !important;
-        height: 34px !important;
-        background-color: transparent !important;
-        border-radius: 50% !important;
-        color: inherit !important;
-        text-decoration: none !important;
-        font-size: 14px !important;
-        font-weight: 400 !important;
-        margin: 0 auto !important;
-        pointer-events: auto !important;
-    }
-    .iphone-cell:hover {
-        background-color: rgba(128, 128, 128, 0.2) !important;
-    }
-    .iphone-cell.selected {
-        background-color: #ff3b30 !important;
-        color: #ffffff !important;
-        font-weight: bold !important;
-    }
-    
-    .ios-sun { color: #ff3b30 !important; }
-    .ios-sat { color: #007aff !important; }
-    
-    .ios-dot {
-        width: 3px !important;
-        height: 3px !important;
-        background-color: #ff3b30 !important;
-        border-radius: 50% !important;
-        margin-top: 1px !important;
-    }
-    .iphone-cell.selected .ios-dot {
-        background-color: #ffffff !important;
-    }
-    </style>
+    cal = cal_obj.monthdayscalendar(
+        selected_year,
+        selected_month
+    )
 
-    <div class="iphone-table-container">
-    <table class='iphone-table'>
-        <thead>
-            <tr>
+
+    weekdays = [
+        "일",
+        "월",
+        "화",
+        "수",
+        "목",
+        "금",
+        "토"
+    ]
+
+
+    sel_date_str = (
+        st.session_state.selected_date.strftime(
+            "%Y-%m-%d"
+        )
+    )
+
+
+    # =====================================================
+    # 캘린더 요일 헤더
+    # =====================================================
+
+    header_html = """
+    <div class="calendar-header">
     """
-    for w in weekdays:
-        cal_html += f"<th>{w}</th>"
-    cal_html += "</tr></thead><tbody>"
 
-    for week in cal:
-        cal_html += "<tr>"
+    for idx, w in enumerate(weekdays):
+
+        if idx == 0:
+
+            cls = "calendar-header-day sun"
+
+        elif idx == 6:
+
+            cls = "calendar-header-day sat"
+
+        else:
+
+            cls = "calendar-header-day weekday"
+
+
+        header_html += (
+            f'<div class="{cls}">{w}</div>'
+        )
+
+
+    header_html += "</div>"
+
+
+    st.markdown(
+        header_html,
+        unsafe_allow_html=True
+    )
+
+
+    # =====================================================
+    # 아이폰 스타일 캘린더
+    #
+    # 핵심 변경:
+    #
+    # 기존:
+    #   <a href="?cal_date=...">
+    #
+    # 변경:
+    #   st.button(...)
+    #
+    # 따라서 URL 이동이 발생하지 않음.
+    # =====================================================
+
+    for week_index, week in enumerate(cal):
+
+        cols = st.columns(7)
+
+
         for day_idx, day in enumerate(week):
-            if day == 0:
-                cal_html += "<td></td>"
-            else:
-                cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
-                has_log = False
-                if not df_all.empty and "날짜" in df_all.columns:
-                    has_log = not df_all[df_all["날짜"] == cur_d_str].empty
-                
-                dot_html = "<div class='ios-dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
-                btn_cls = "iphone-cell selected" if cur_d_str == sel_date_str else "iphone-cell"
-                
-                day_cls = ""
-                if day_idx == 0:
-                    day_cls = " ios-sun"
-                elif day_idx == 6:
-                    day_cls = " ios-sat"
 
-                cal_html += f"<td><a href='?cal_date={cur_d_str}&tab=cal' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
-        cal_html += "</tr>"
-    cal_html += "</tbody></table></div>"
+            with cols[day_idx]:
 
-    st.markdown(cal_html, unsafe_allow_html=True)
+                if day == 0:
+
+                    st.markdown(
+                        '<div style="height:34px;"></div>',
+                        unsafe_allow_html=True
+                    )
+
+                else:
+
+                    cur_d_str = (
+                        f"{selected_year}-"
+                        f"{selected_month:02d}-"
+                        f"{day:02d}"
+                    )
+
+
+                    # 해당 날짜에 기록이 있는지 확인
+
+                    has_log = False
+
+                    if (
+                        not df_all.empty
+                        and "날짜" in df_all.columns
+                    ):
+
+                        has_log = not df_all[
+                            df_all["날짜"] == cur_d_str
+                        ].empty
+
+
+                    # 선택 날짜인지 확인
+
+                    is_selected = (
+                        cur_d_str == sel_date_str
+                    )
+
+
+                    # 일요일 / 토요일에 따라 key를 다르게 지정
+
+                    if is_selected:
+
+                        button_key = (
+                            f"calendar_selected_{cur_d_str}"
+                        )
+
+                    elif day_idx == 0:
+
+                        button_key = (
+                            f"calendar_date_sun_{cur_d_str}"
+                        )
+
+                    elif day_idx == 6:
+
+                        button_key = (
+                            f"calendar_date_sat_{cur_d_str}"
+                        )
+
+                    else:
+
+                        button_key = (
+                            f"calendar_date_{cur_d_str}"
+                        )
+
+
+                    # =================================================
+                    # 날짜 버튼
+                    #
+                    # URL을 변경하지 않고 Streamlit 이벤트로 처리
+                    # =================================================
+
+                    if st.button(
+                        str(day),
+                        key=button_key,
+                        use_container_width=False
+                    ):
+
+                        st.session_state.selected_date = (
+                            datetime.strptime(
+                                cur_d_str,
+                                "%Y-%m-%d"
+                            ).date()
+                        )
+
+                        st.session_state.is_editing = False
+
+                        st.rerun()
+
+
+                    # 기록이 있는 날의 빨간 점
+
+                    if has_log:
+
+                        st.markdown(
+                            '<div class="calendar-dot"></div>',
+                            unsafe_allow_html=True
+                        )
+
+                    else:
+
+                        st.markdown(
+                            '<div class="calendar-empty-dot"></div>',
+                            unsafe_allow_html=True
+                        )
+
+
+        # 주 사이 간격
+
+        st.markdown(
+            '<div class="calendar-row-spacer"></div>',
+            unsafe_allow_html=True
+        )
+
+
     st.markdown("---")
 
-    st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
 
-    if not df_all.empty and "날짜" in df_all.columns:
-        df_target = df_all[df_all["날짜"] == sel_date_str]
+    # =====================================================
+    # 선택한 날짜
+    # =====================================================
+
+    st.markdown(
+        f"### 📌 선택한 날짜: {sel_date_str}"
+    )
+
+
+    if (
+        not df_all.empty
+        and "날짜" in df_all.columns
+    ):
+
+        df_target = df_all[
+            df_all["날짜"] == sel_date_str
+        ]
+
     else:
+
         df_target = pd.DataFrame()
 
+
+    # =====================================================
+    # 해당 날짜의 기록 목록
+    # =====================================================
+
     if not df_target.empty:
-        st.write("📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)")
+
+        st.write(
+            "📋 **이날의 기록 목록** (삭제할 항목을 선택하세요)"
+        )
+
+
         selected_ids_to_delete = []
 
+
         for _, row in df_target.iterrows():
-            time_str = row.get("시간", "시간 미상")
-            memo_str = row.get("메모", "없음")
-            row_id = row.get("id")
-            item_label = f"[{time_str}] {row['항목']}: {row['횟수']}회 (메모: {memo_str})"
 
-            if st.checkbox(item_label, key=f"chk_{row_id}"):
-                selected_ids_to_delete.append(row_id)
+            time_str = row.get(
+                "시간",
+                "시간 미상"
+            )
 
-        st.markdown("<br>", unsafe_allow_html=True)
+            memo_str = row.get(
+                "메모",
+                "없음"
+            )
+
+            row_id = row.get(
+                "id"
+            )
+
+
+            item_label = (
+                f"[{time_str}] "
+                f"{row['항목']}: "
+                f"{row['횟수']}회 "
+                f"(메모: {memo_str})"
+            )
+
+
+            if st.checkbox(
+                item_label,
+                key=f"chk_{row_id}"
+            ):
+
+                selected_ids_to_delete.append(
+                    row_id
+                )
+
+
+        st.markdown(
+            "<br>",
+            unsafe_allow_html=True
+        )
+
 
         if selected_ids_to_delete:
-            if st.button("🗑️ 선택한 기록 삭제", use_container_width=True):
-                st.session_state.log_data = [
-                    item for item in st.session_state.log_data if item["id"] not in selected_ids_to_delete
-                ]
-                st.success("선택한 기록이 삭제되었습니다.")
-                st.rerun()
-    else:
-        st.info("이 날짜에는 아직 기록이 없습니다.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+            if st.button(
+                "🗑️ 선택한 기록 삭제",
+                use_container_width=True
+            ):
+
+                st.session_state.log_data = [
+                    item
+                    for item in st.session_state.log_data
+                    if item["id"]
+                    not in selected_ids_to_delete
+                ]
+
+
+                st.success(
+                    "선택한 기록이 삭제되었습니다."
+                )
+
+                st.rerun()
+
+
+    else:
+
+        st.info(
+            "이 날짜에는 아직 기록이 없습니다."
+        )
+
+
+    st.markdown(
+        "<br>",
+        unsafe_allow_html=True
+    )
+
+
+    # =====================================================
+    # 과거 날짜 기록 추가
+    # =====================================================
 
     if not st.session_state.is_editing:
-        if st.button("✏️ 이 날짜에 기록 추가하기", use_container_width=True):
+
+        if st.button(
+            "✏️ 이 날짜에 기록 추가하기",
+            use_container_width=True
+        ):
+
             st.session_state.is_editing = True
+
             st.rerun()
+
+
     else:
-        st.markdown("#### ➕ 과거 날짜 기록 추가")
-        with st.form(f"edit_form_{sel_date_str}", clear_on_submit=True):
+
+        st.markdown(
+            "#### ➕ 과거 날짜 기록 추가"
+        )
+
+
+        with st.form(
+            f"edit_form_{sel_date_str}",
+            clear_on_submit=True
+        ):
+
             add_category = st.selectbox(
                 "항목",
                 [
@@ -680,20 +1198,69 @@ elif nav == "📅 캘린더 (월간 보기)":
                     "✨ 직접 입력"
                 ]
             )
-            if add_category == "✨ 직접 입력":
-                add_category = st.text_input("직접 입력")
 
-            add_count = st.number_input("횟수 / 양", min_value=1, value=1)
-            add_memo = st.text_input("메모")
+
+            if add_category == "✨ 직접 입력":
+
+                add_category = st.text_input(
+                    "직접 입력"
+                )
+
+
+            add_count = st.number_input(
+                "횟수 / 양",
+                min_value=1,
+                value=1
+            )
+
+
+            add_memo = st.text_input(
+                "메모"
+            )
+
 
             col_sub1, col_sub2 = st.columns(2)
-            submit_added = col_sub1.form_submit_button("저장하기", use_container_width=True)
-            cancel_edit = col_sub2.form_submit_button("닫기", use_container_width=True)
+
+
+            submit_added = (
+                col_sub1.form_submit_button(
+                    "저장하기",
+                    use_container_width=True
+                )
+            )
+
+
+            cancel_edit = (
+                col_sub2.form_submit_button(
+                    "닫기",
+                    use_container_width=True
+                )
+            )
+
 
             if submit_added:
+
                 save_kst = get_kst_now()
-                now_time = save_kst.strftime("%H:%M:%S")
-                new_id = max([item["id"] for item in st.session_state.log_data]) + 1 if st.session_state.log_data else 1
+
+                now_time = (
+                    save_kst.strftime(
+                        "%H:%M:%S"
+                    )
+                )
+
+
+                new_id = (
+                    max(
+                        [
+                            item["id"]
+                            for item
+                            in st.session_state.log_data
+                        ]
+                    ) + 1
+                    if st.session_state.log_data
+                    else 1
+                )
+
 
                 new_entry = {
                     "id": new_id,
@@ -703,13 +1270,28 @@ elif nav == "📅 캘린더 (월간 보기)":
                     "메모": add_memo,
                     "시간": now_time
                 }
-                st.session_state.log_data.append(new_entry)
+
+
+                st.session_state.log_data.append(
+                    new_entry
+                )
+
+
                 st.session_state.is_editing = False
-                st.success("추가되었습니다!")
+
+
+                st.success(
+                    "추가되었습니다!"
+                )
+
+
                 st.rerun()
 
+
             if cancel_edit:
+
                 st.session_state.is_editing = False
+
                 st.rerun()
 
 
@@ -731,4 +1313,8 @@ html_ad = """
     📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.
 </div>
 """
-st.markdown(html_ad, unsafe_allow_html=True)
+
+st.markdown(
+    html_ad,
+    unsafe_allow_html=True
+)
