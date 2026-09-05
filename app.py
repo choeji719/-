@@ -120,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱에 현재 폰트 및 모바일 캘린더 가로 고정 강제 CSS 적용
+# 전체 앱 스타일 및 모바일 좌우 스크롤 방지 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -148,6 +148,28 @@ st.markdown(
 
 
     /* =====================================================
+       모바일 좌우 밀림/스크롤 현상 완전 차단
+       ===================================================== */
+
+    html, body {{
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }}
+
+    [data-testid="stAppViewContainer"] {{
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }}
+
+    .main .block-container {{
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        overflow-x: hidden !important;
+    }}
+
+
+    /* =====================================================
        사이드바 제거
        ===================================================== */
 
@@ -157,9 +179,9 @@ st.markdown(
 
 
     /* =====================================================
-       [핵심 수정] 모바일 화면에서도 7개 컬럼이 절대 세로로 떨어지지 않고
-       한 줄에 가로로 나란히 고정되도록 Flex 강제 적용
+       캘린더 7열 가로 고정 및 모바일 간격 최적화
        ===================================================== */
+
     [data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
@@ -176,8 +198,8 @@ st.markdown(
     [data-testid="column"] button {{
         width: 100% !important;
         padding: 6px 0px !important;
-        font-size: 13px !important;
-        min-height: 36px !important;
+        font-size: 12px !important;
+        min-height: 34px !important;
         white-space: nowrap !important;
     }}
 
@@ -202,7 +224,7 @@ st.markdown(
        ===================================================== */
 
     .main-title {{
-        font-size: 24px;
+        font-size: 22px;
         font-weight: bold;
         margin-bottom: 0px;
     }}
@@ -210,7 +232,7 @@ st.markdown(
 
     .sub-desc {{
         color: gray;
-        font-size: 13px;
+        font-size: 12px;
         margin-bottom: 15px;
     }}
 
@@ -222,19 +244,12 @@ st.markdown(
     .today-banner {{
         background-color: rgba(33, 150, 243, 0.12);
         color: inherit;
-
-        padding: 12px 15px;
-
-        border-radius: 12px;
-
+        padding: 10px 12px;
+        border-radius: 10px;
         font-weight: 600;
-
-        font-size: 15px;
-
-        margin-bottom: 20px;
-
+        font-size: 14px;
+        margin-bottom: 15px;
         text-align: center;
-
         border: 1px solid rgba(33, 150, 243, 0.2);
     }}
 
@@ -244,8 +259,8 @@ st.markdown(
        ===================================================== */
 
     [data-testid="stPopoverBody"] {{
-        width: 360px !important;
-        max-width: 360px !important;
+        width: 320px !important;
+        max-width: 90vw !important;
     }}
 
     [data-testid="stPopover"] button svg,
@@ -287,8 +302,8 @@ st.markdown(
 
     .popup-box {{
         background-color: rgba(128, 128, 128, 0.08);
-        padding: 20px;
-        border-radius: 15px;
+        padding: 15px;
+        border-radius: 12px;
         border: 1px solid rgba(128, 128, 128, 0.15);
         margin-top: 15px;
     }}
@@ -450,7 +465,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일 가로 7열 강제 고정 캘린더)
+# 2. 캘린더 (모바일 한 화면 최적화 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -479,11 +494,11 @@ elif nav == "📅 캘린더 (월간 보기)":
     cols = st.columns(7)
     for i, day_name in enumerate(weekdays):
         cols[i].markdown(
-            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 13px;'>{day_name}</div>",
+            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 12px;'>{day_name}</div>",
             unsafe_allow_html=True
         )
 
-    st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 2px;'></div>", unsafe_allow_html=True)
 
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
@@ -612,12 +627,12 @@ elif nav == "📅 캘린더 (월간 보기)":
 html_ad = """
 <div style="
     background-color: rgba(128, 128, 128, 0.08);
-    padding: 15px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: 10px;
     text-align: center;
     color: #868e96;
-    font-size: 13px;
-    margin-top: 30px;
+    font-size: 12px;
+    margin-top: 25px;
     border: 1px dashed rgba(128, 128, 128, 0.2);
 ">
     📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.
