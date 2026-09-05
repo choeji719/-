@@ -39,14 +39,11 @@ font_mapping = {
 
 
 # =========================================================
-# 세션 스테이트 초기화
+# 세션 스테이트
 # =========================================================
 
 if "selected_font" not in st.session_state:
     st.session_state.selected_font = "CookieRun (발랄하고 둥글둥글)"
-
-if "settings_open" not in st.session_state:
-    st.session_state.settings_open = False
 
 if "log_data" not in st.session_state:
     st.session_state.log_data = [
@@ -79,35 +76,25 @@ if "current_count" not in st.session_state:
 
 
 # =========================================================
-# 현재 선택된 폰트
+# 현재 폰트
 # =========================================================
 
-current_font_css = font_mapping.get(
-    st.session_state.selected_font,
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-)
+current_font_css = font_mapping[
+    st.session_state.selected_font
+]
 
 
 # =========================================================
-# 폰트 불러오기
+# 폰트 로딩
 # =========================================================
 
 st.markdown(
     """
     <style>
 
-    /* -----------------------------------------------------
-       Google Fonts
-       ----------------------------------------------------- */
-
     @import url(
         'https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap'
     );
-
-
-    /* -----------------------------------------------------
-       CookieRun
-       ----------------------------------------------------- */
 
     @font-face {
         font-family: 'CookieRun-Regular';
@@ -127,7 +114,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 폰트 적용
+# 전체 앱에 현재 폰트 적용
 # =========================================================
 
 st.markdown(
@@ -147,23 +134,25 @@ st.markdown(
     option,
     [data-testid="stMarkdownContainer"],
     [data-baseweb="select"],
-    [data-baseweb="select"] * {{
+    [data-baseweb="select"] *,
+    [data-testid="stRadio"],
+    [data-testid="stRadio"] * {{
         font-family: {current_font_css} !important;
     }}
 
 
-    /* -----------------------------------------------------
-       사이드바 숨김
-       ----------------------------------------------------- */
+    /* =====================================================
+       사이드바 제거
+       ===================================================== */
 
     [data-testid="stSidebar"] {{
         display: none;
     }}
 
 
-    /* -----------------------------------------------------
-       메인 제목
-       ----------------------------------------------------- */
+    /* =====================================================
+       제목
+       ===================================================== */
 
     .main-title {{
         font-size: 24px;
@@ -172,10 +161,6 @@ st.markdown(
     }}
 
 
-    /* -----------------------------------------------------
-       설명
-       ----------------------------------------------------- */
-
     .sub-desc {{
         color: gray;
         font-size: 13px;
@@ -183,101 +168,136 @@ st.markdown(
     }}
 
 
-    /* -----------------------------------------------------
-       오늘 날짜 배너
-       ----------------------------------------------------- */
+    /* =====================================================
+       오늘 날짜
+       ===================================================== */
 
     .today-banner {{
         background-color: rgba(33, 150, 243, 0.12);
         color: inherit;
+
         padding: 12px 15px;
+
         border-radius: 12px;
+
         font-weight: 600;
+
         font-size: 15px;
+
         margin-bottom: 20px;
+
         text-align: center;
+
         border: 1px solid rgba(33, 150, 243, 0.2);
     }}
 
 
-    /* -----------------------------------------------------
+    /* =====================================================
+       Popover 내부 크기
+       ===================================================== */
+
+    [data-testid="stPopoverBody"] {{
+        width: 360px !important;
+        max-width: 360px !important;
+    }}
+
+
+    /* =====================================================
+       Popover의 expand_more / expand_less 아이콘 제거
+       
+       아이콘 자체를 안 보이게 하고
+       ⚙️ 설정 텍스트만 표시
+       ===================================================== */
+
+    [data-testid="stPopover"] button svg {{
+        display: none !important;
+    }}
+
+    [data-testid="stPopover"] button [data-testid="stIconMaterial"] {{
+        display: none !important;
+    }}
+
+    [data-testid="stPopover"] button span[class*="material-symbols"] {{
+        display: none !important;
+    }}
+
+
+    /* =====================================================
        설정 버튼
-       ----------------------------------------------------- */
+       ===================================================== */
 
-    .settings-button-area {{
-        display: flex;
-        justify-content: flex-end;
+    [data-testid="stPopover"] > button {{
+        justify-content: center !important;
+        gap: 0 !important;
     }}
 
 
-    /* -----------------------------------------------------
-       설정 패널
-       ----------------------------------------------------- */
+    /* =====================================================
+       폰트 선택 영역
+       ===================================================== */
 
-    .settings-panel {{
-        background-color: rgba(128, 128, 128, 0.06);
-        padding: 20px;
-        border-radius: 15px;
-        border: 1px solid rgba(128, 128, 128, 0.20);
-        margin-top: 10px;
-        margin-bottom: 15px;
+    .font-title {{
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 8px;
+        margin-bottom: 8px;
     }}
 
 
-    /* -----------------------------------------------------
-       현재 선택된 폰트 표시
-       ----------------------------------------------------- */
+    /* =====================================================
+       현재 선택된 폰트
+       ===================================================== */
 
-    .current-font-box {{
-        background-color: rgba(128, 128, 128, 0.10);
-        padding: 12px 14px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        font-size: 15px;
+    .current-font {{
+        background-color: rgba(128, 128, 128, 0.09);
+
+        padding: 9px 12px;
+
+        border-radius: 9px;
+
+        margin-bottom: 12px;
+
+        font-size: 14px;
     }}
 
 
-    /* -----------------------------------------------------
-       폰트 미리보기 박스
-       ----------------------------------------------------- */
+    /* =====================================================
+       폰트 미리보기 라디오 영역
+       ===================================================== */
 
-    .font-preview-box {{
-        background-color: rgba(128, 128, 128, 0.07);
-
-        border: 1px solid rgba(128, 128, 128, 0.16);
-
-        border-radius: 10px;
-
-        padding: 10px 12px;
-
-        min-height: 48px;
-
-        display: flex;
-
-        align-items: center;
+    [data-testid="stPopoverBody"] [data-testid="stRadio"] > div {{
+        gap: 3px !important;
     }}
 
 
-    /* -----------------------------------------------------
-       선택된 폰트 미리보기
-       ----------------------------------------------------- */
-
-    .font-preview-selected {{
-        background-color: rgba(33, 150, 243, 0.12);
-
-        border: 1px solid rgba(33, 150, 243, 0.45);
+    [data-testid="stPopoverBody"] [data-testid="stRadio"] label {{
+        padding: 5px 8px !important;
+        border-radius: 8px !important;
     }}
 
 
-    /* -----------------------------------------------------
+    /* =====================================================
+       라디오 버튼 크기
+       ===================================================== */
+
+    [data-testid="stPopoverBody"] [data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] {{
+        font-size: 15px !important;
+    }}
+
+
+    /* =====================================================
        캘린더 기록 박스
-       ----------------------------------------------------- */
+       ===================================================== */
 
     .popup-box {{
         background-color: rgba(128, 128, 128, 0.08);
+
         padding: 20px;
+
         border-radius: 15px;
+
         border: 1px solid rgba(128, 128, 128, 0.15);
+
         margin-top: 15px;
     }}
 
@@ -312,136 +332,112 @@ with top_col1:
 
 
 # =========================================================
-# 설정 버튼
+# 설정 Popover
 # =========================================================
 
 with top_col2:
 
-    if st.button(
+    with st.popover(
         "⚙️ 설정",
-        key="settings_toggle",
         use_container_width=True
     ):
 
-        st.session_state.settings_open = (
-            not st.session_state.settings_open
+        st.markdown(
+            "### 🎨 앱 설정"
         )
 
-        st.rerun()
+
+        # -------------------------------------------------
+        # 현재 폰트
+        # -------------------------------------------------
+
+        st.markdown(
+            f"""
+            <div
+                class="current-font"
+                style="font-family: {current_font_css} !important;"
+            >
+                현재 폰트:
+                <strong>
+                    {st.session_state.selected_font}
+                </strong>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+        st.markdown(
+            '<div class="font-title">폰트 선택 (15종)</div>',
+            unsafe_allow_html=True
+        )
+
+
+        # -------------------------------------------------
+        # 폰트 선택
+        #
+        # 라디오의 각 항목에 폰트별 CSS를 적용
+        # -------------------------------------------------
+
+        font_names = list(font_mapping.keys())
+
+
+        selected_index = font_names.index(
+            st.session_state.selected_font
+        )
+
+
+        selected_font = st.radio(
+            "폰트",
+            font_names,
+            index=selected_index,
+            label_visibility="collapsed"
+        )
+
+
+        # -------------------------------------------------
+        # 선택이 변경되었으면 즉시 적용
+        # -------------------------------------------------
+
+        if selected_font != st.session_state.selected_font:
+
+            st.session_state.selected_font = selected_font
+
+            st.rerun()
 
 
 # =========================================================
-# 설정 패널
+# 라디오 각각에 자기 폰트 적용
+#
+# Streamlit 라디오 항목은 DOM 순서대로 생성되므로
+# nth-child를 이용하여 15개 각각에 다른 폰트를 적용
 # =========================================================
 
-if st.session_state.settings_open:
+radio_font_css = ""
 
-    st.markdown(
-        '<div class="settings-panel">',
-        unsafe_allow_html=True
-    )
+font_list = list(font_mapping.values())
 
-    st.markdown(
-        "### 🎨 앱 설정"
-    )
+for i, font_css in enumerate(font_list):
 
-
-    # -----------------------------------------------------
-    # 현재 폰트
-    # -----------------------------------------------------
-
-    st.markdown(
-        f"""
-        <div
-            class="current-font-box"
-            style="font-family: {current_font_css} !important;"
-        >
-            현재 폰트:
-            <strong>
-                {st.session_state.selected_font}
-            </strong>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    radio_font_css += f"""
+    [data-testid="stPopoverBody"]
+    [data-testid="stRadio"]
+    > div
+    > label:nth-child({i + 1})
+    div[data-testid="stMarkdownContainer"] {{
+        font-family: {font_css} !important;
+    }}
+    """
 
 
-    st.markdown(
-        "##### 폰트 선택 (15종)"
-    )
-
-
-    # -----------------------------------------------------
-    # 폰트 목록
-    #
-    # 각 폰트는 HTML로 직접 렌더링한다.
-    # 따라서 각 폰트 이름이 자기 폰트로 표시된다.
-    # -----------------------------------------------------
-
-    for font_name, font_css in font_mapping.items():
-
-        is_selected = (
-            font_name == st.session_state.selected_font
-        )
-
-
-        # 폰트 미리보기
-
-        preview_class = (
-            "font-preview-box font-preview-selected"
-            if is_selected
-            else "font-preview-box"
-        )
-
-
-        preview_text = (
-            "✓  " + font_name
-            if is_selected
-            else font_name
-        )
-
-
-        col_font, col_button = st.columns(
-            [4, 1],
-            vertical_alignment="center"
-        )
-
-
-        with col_font:
-
-            st.markdown(
-                f"""
-                <div
-                    class="{preview_class}"
-                    style="
-                        font-family: {font_css} !important;
-                        font-size: 16px;
-                    "
-                >
-                    {preview_text}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-
-        with col_button:
-
-            if st.button(
-                "선택",
-                key=f"font_select_{font_name}",
-                use_container_width=True
-            ):
-
-                st.session_state.selected_font = font_name
-
-                st.rerun()
-
-
-    st.markdown(
-        "</div>",
-        unsafe_allow_html=True
-    )
+st.markdown(
+    f"""
+    <style>
+    {radio_font_css}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
@@ -452,7 +448,7 @@ st.markdown("---")
 
 
 # =========================================================
-# 1. 바로 기록하기 화면
+# 1. 바로 기록하기
 # =========================================================
 
 if nav == "⚡ 바로 기록하기":
@@ -489,7 +485,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # -----------------------------------------------------
-    # 기록 입력 폼
+    # 기록 폼
     # -----------------------------------------------------
 
     with st.form(
@@ -510,10 +506,6 @@ if nav == "⚡ 바로 기록하기":
         )
 
 
-        # -------------------------------------------------
-        # 직접 입력
-        # -------------------------------------------------
-
         if category == "✨ 직접 입력":
 
             category = st.text_input(
@@ -525,10 +517,6 @@ if nav == "⚡ 바로 기록하기":
             "📊 횟수 / 양 선택"
         )
 
-
-        # -------------------------------------------------
-        # 숫자 입력
-        # -------------------------------------------------
 
         count_input = st.number_input(
             "직접 입력",
@@ -545,7 +533,7 @@ if nav == "⚡ 바로 기록하기":
 
 
         # -------------------------------------------------
-        # 빠른 숫자 조절
+        # 숫자 조절
         # -------------------------------------------------
 
         c1, c2, c3, c4, c5 = st.columns(5)
@@ -728,7 +716,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 화면
+# 2. 캘린더
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -778,7 +766,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # -----------------------------------------------------
-    # 캘린더 생성
+    # 캘린더
     # -----------------------------------------------------
 
     cal = calendar.monthcalendar(
@@ -797,10 +785,6 @@ elif nav == "📅 캘린더 (월간 보기)":
         "일"
     ]
 
-
-    # -----------------------------------------------------
-    # 요일
-    # -----------------------------------------------------
 
     cols = st.columns(7)
 
@@ -828,7 +812,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # -----------------------------------------------------
-    # 전체 기록 데이터
+    # 데이터
     # -----------------------------------------------------
 
     if st.session_state.log_data:
@@ -851,7 +835,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # -----------------------------------------------------
-    # 캘린더 날짜
+    # 날짜 버튼
     # -----------------------------------------------------
 
     for week in cal:
@@ -888,8 +872,6 @@ elif nav == "📅 캘린더 (월간 보기)":
                     ].empty
 
 
-                # 기록이 있으면 점 표시
-
                 btn_label = (
                     f"{day} •"
                     if has_log
@@ -920,7 +902,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # =====================================================
-    # 선택된 날짜
+    # 선택한 날짜
     # =====================================================
 
     sel_date_str = (
@@ -946,10 +928,6 @@ elif nav == "📅 캘린더 (월간 보기)":
             unsafe_allow_html=True
         )
 
-
-        # -------------------------------------------------
-        # 해당 날짜 기록
-        # -------------------------------------------------
 
         if (
             not df_all.empty
@@ -1012,7 +990,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
         # -------------------------------------------------
-        # 기록 추가 버튼
+        # 기록 추가
         # -------------------------------------------------
 
         if not st.session_state.is_editing:
@@ -1152,7 +1130,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
 # =========================================================
-# 하단 광고 영역
+# 광고 영역
 # =========================================================
 
 html_ad = """
