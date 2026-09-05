@@ -46,14 +46,14 @@ font_mapping = {
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# ⭐ [해결 1] 드롭다운 리스트의 각 항목에 개별 폰트 스타일 적용 스크립트 생성
-font_preview_css = ""
-for idx, (font_name, font_css) in enumerate(font_mapping.items(), 1):
-    font_preview_css += f"""
-    ul[role="listbox"] li:nth-child({idx}),
-    ul[role="listbox"] li:nth-child({idx}) * {{
-        font-family: {font_css} !important;
-        font-size: 16px !important;
+# 드롭다운(포털 메뉴) 내부 각 항목별 개별 폰트 실시간 적용 CSS 생성
+dropdown_font_css = ""
+for idx, (f_name, f_css) in enumerate(font_mapping.items(), 1):
+    dropdown_font_css += f"""
+    div[data-baseweb="menu"] li[role="option"]:nth-child({idx}),
+    div[data-baseweb="menu"] li[role="option"]:nth-child({idx}) * {{
+        font-family: {f_css} !important;
+        font-size: 15px !important;
     }}
     """
 
@@ -70,22 +70,23 @@ st.markdown(f"""
         font-style: normal;
     }}
 
-    /* 앱 전체 기본 폰트 강제 적용 */
-    html, body, p, span, div, label, input, textarea, select, button,
-    .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
+    /* 앱 전체 주요 텍스트에 선택된 폰트 적용 (아이콘 태그 제외) */
+    .stApp p, .stApp span:not([class*="material"]):not([data-testid="stIcon"]), .stApp div, .stApp label, .stApp input, .stApp textarea, .stApp select, .stApp button, .stMarkdown {{
         font-family: {current_font_css} !important;
     }}
-    
-    /* ⭐ [해결 2] 'expand_more' 등 Material 아이콘 폰트 강제 복구 (글자 겹침 방지) */
-    .material-symbols-rounded,
-    .material-icons,
-    span[class*="material"],
-    i[class*="icon"] {{
-        font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+
+    /* ⭐ 'expand_more' 및 Streamlit 내부 아이콘 깨짐(글자 노출) 방지 완벽 보호 */
+    .material-icons, 
+    .material-symbols-rounded, 
+    [data-testid="stIcon"], 
+    span[class*="material"], 
+    i[class*="icon"],
+    svg {{
+        font-family: inherit !important;
     }}
 
-    /* 설정 팝오버 등 내부 드롭다운 옵션 폰트 각자 다르게 적용 */
-    {font_preview_css}
+    /* ⭐ 드롭다운 목록 개별 폰트 스타일 매핑 */
+    {dropdown_font_css}
 
     [data-testid="stSidebar"] {{
         display: none;
