@@ -429,7 +429,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (CSS Grid 기반 모바일 완벽 대응 아이폰 캘린더)
+# 2. 캘린더 (모바일 완벽 호환 아이폰 스타일 표 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -468,94 +468,97 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 모바일에서도 절대 세로로 깨지지 않는 CSS Grid 캘린더 디자인
+    # 안정적인 HTML Table 구조를 활용한 아이폰 스타일 캘린더
     cal_html = """
     <style>
-    .ios-calendar-box {
-        width: 100%;
-        margin-bottom: 15px;
+    .iphone-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+        margin-bottom: 15px !important;
+        background: transparent !important;
+        border: none !important;
     }
-    .ios-weekdays-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        text-align: center;
-        font-weight: 500;
-        font-size: 12px;
-        margin-bottom: 8px;
+    .iphone-table th {
+        text-align: center !important;
+        font-weight: 500 !important;
+        padding: 6px 0 10px 0 !important;
+        font-size: 12px !important;
+        border: none !important;
+        background: transparent !important;
     }
-    .ios-weekdays-grid div:nth-child(1) { color: #ff3b30; }
-    .ios-weekdays-grid div:nth-child(7) { color: #007aff; }
-    .ios-weekdays-grid div:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93; }
+    .iphone-table th:nth-child(1) { color: #ff3b30 !important; }
+    .iphone-table th:nth-child(7) { color: #007aff !important; }
+    .iphone-table th:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93 !important; }
 
-    .ios-days-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        row-gap: 6px;
-        column-gap: 2px;
+    .iphone-table td {
+        text-align: center !important;
+        padding: 6px 0 !important;
+        vertical-align: middle !important;
+        border: none !important;
+        background: transparent !important;
     }
-    .ios-day-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+
+    .iphone-cell {
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        background-color: transparent !important;
+        border-radius: 50% !important;
+        color: inherit !important;
+        text-decoration: none !important;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        margin: 0 auto !important;
     }
-    .ios-date-btn {
-        display: inline-flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        background-color: transparent;
-        border: none;
-        border-radius: 50%;
-        color: inherit;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 400;
-        transition: background-color 0.15s;
+    .iphone-cell:hover {
+        background-color: rgba(128, 128, 128, 0.2) !important;
     }
-    .ios-date-btn:hover {
-        background-color: rgba(128, 128, 128, 0.15);
-    }
-    .ios-date-btn.selected {
+    .iphone-cell.selected {
         background-color: #ff3b30 !important;
         color: #ffffff !important;
-        font-weight: bold;
+        font-weight: bold !important;
     }
     
     .ios-sun { color: #ff3b30 !important; }
     .ios-sat { color: #007aff !important; }
     
     .ios-dot {
-        width: 3px;
-        height: 3px;
-        background-color: #ff3b30;
-        border-radius: 50%;
-        margin-top: 1px;
+        width: 3px !important;
+        height: 3px !important;
+        background-color: #ff3b30 !important;
+        border-radius: 50% !important;
+        margin-top: 1px !important;
     }
-    .ios-date-btn.selected .ios-dot {
+    .iphone-cell.selected .ios-dot {
         background-color: #ffffff !important;
     }
     </style>
 
-    <div class="ios-calendar-box">
-        <div class="ios-weekdays-grid">
+    <table class='iphone-table'>
+        <thead>
+            <tr>
     """
     for w in weekdays:
-        cal_html += f"<div>{w}</div>"
-    cal_html += "</div><div class='ios-days-grid'>"
+        cal_html += f"<th>{w}</th>"
+    cal_html += "</tr></thead><tbody>"
 
-    for week_idx, week in enumerate(cal):
+    for week in cal:
+        cal_html += "<tr>"
         for day_idx, day in enumerate(week):
-            cal_html += "<div class='ios-day-cell'>"
-            if day != 0:
+            if day == 0:
+                cal_html += "<td></td>"
+            else:
                 cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
                     has_log = not df_all[df_all["날짜"] == cur_d_str].empty
                 
                 dot_html = "<div class='ios-dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
-                btn_cls = "ios-date-btn selected" if cur_d_str == sel_date_str else "ios-date-btn"
+                btn_cls = "iphone-cell selected" if cur_d_str == sel_date_str else "iphone-cell"
                 
                 day_cls = ""
                 if day_idx == 0:
@@ -563,10 +566,9 @@ elif nav == "📅 캘린더 (월간 보기)":
                 elif day_idx == 6:
                     day_cls = " ios-sat"
 
-                cal_html += f"<a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a>"
-            cal_html += "</div>"
-            
-    cal_html += "</div></div>"
+                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
+        cal_html += "</tr>"
+    cal_html += "</tbody></table>"
 
     st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
