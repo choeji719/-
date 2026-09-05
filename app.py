@@ -120,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱에 현재 폰트 적용
+# 전체 앱에 현재 폰트 및 불필요 요소 제거 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -153,6 +153,26 @@ st.markdown(
 
     [data-testid="stSidebar"] {{
         display: none;
+    }}
+
+
+    /* =====================================================
+       데이터프레임(표) 상단 설정/메뉴(...) 툴바 숨기기
+       ===================================================== */
+
+    [data-testid="stDataFrameToolbar"] {{
+        display: none !important;
+    }}
+
+
+    /* =====================================================
+       마크다운 제목/텍스트에 생기는 앵커 링크 아이콘 숨기기
+       ===================================================== */
+
+    .stMarkdown a.header-anchor, 
+    [data-testid="stMarkdownContainer"] a.anchor-link,
+    a[class*="anchor"] {{
+        display: none !important;
     }}
 
 
@@ -699,7 +719,8 @@ if nav == "⚡ 바로 기록하기":
 
             st.dataframe(
                 display_df,
-                use_container_width=True
+                use_container_width=True,
+                hide_index=True
             )
 
 
