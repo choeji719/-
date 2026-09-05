@@ -157,7 +157,22 @@ st.markdown(
 
 
     /* =====================================================
-       마크다운 제목/텍스트에 생기는 앵커 링크 및 아이콘 완전 차단
+       데이터프레임 우측 상단 (...) 툴바 버튼 및 오버레이 완벽 제거
+       ===================================================== */
+
+    [data-testid="stDataFrameToolbar"],
+    div[data-testid="stElementToolbar"],
+    [data-testid="stElementToolbarButton"],
+    button[kind="headerButton"] {{
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }}
+
+
+    /* =====================================================
+       마크다운 제목 링크 차단
        ===================================================== */
 
     .stMarkdown a.header-anchor, 
@@ -675,7 +690,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # =====================================================
-    # 오늘의 기록 (완전한 HTML 테이블 구조)
+    # 오늘의 기록 (깔끔한 기본 표 형태 복원 및 ... 툴바 제거)
     # =====================================================
 
     st.markdown(
@@ -711,55 +726,13 @@ if nav == "⚡ 바로 기록하기":
                 ]
             ].reset_index(drop=True)
 
-            table_rows = ""
-            for _, row in display_df.iterrows():
-                table_rows += f"""
-                    <tr>
-                        <td>{row['시간']}</td>
-                        <td>{row['항목']}</td>
-                        <td>{row['횟수']}회</td>
-                        <td>{row['메모'] if row['메모'] else '-'}</td>
-                    </tr>
-                """
 
-            table_html = f"""
-            <style>
-                .custom-table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 5px;
-                    margin-bottom: 10px;
-                    font-size: 14px;
-                }}
-                .custom-table th {{
-                    background-color: rgba(128, 128, 128, 0.12);
-                    padding: 10px;
-                    text-align: center;
-                    border-bottom: 2px solid rgba(128, 128, 128, 0.2);
-                    font-weight: bold;
-                }}
-                .custom-table td {{
-                    padding: 10px;
-                    text-align: center;
-                    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-                }}
-            </style>
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th>시간</th>
-                        <th>항목</th>
-                        <th>횟수</th>
-                        <th>메모</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows}
-                </tbody>
-            </table>
-            """
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True
+            )
 
-            st.markdown(table_html, unsafe_allow_html=True)
 
         else:
 
