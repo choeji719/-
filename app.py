@@ -157,20 +157,6 @@ st.markdown(
 
 
     /* =====================================================
-       데이터프레임(표) 상단 설정/메뉴(...) 및 툴바 완전 숨기기
-       ===================================================== */
-
-    [data-testid="stDataFrameToolbar"],
-    div[data-testid="stElementToolbar"],
-    button[kind="headerButton"],
-    .qa-element-toolbar,
-    [data-testid="stElementToolbarButton"] {{
-        display: none !important;
-        visibility: hidden !important;
-    }}
-
-
-    /* =====================================================
        마크다운 제목/텍스트에 생기는 앵커 링크 및 아이콘 완전 차단
        ===================================================== */
 
@@ -689,7 +675,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # =====================================================
-    # 오늘의 기록
+    # 오늘의 기록 (HTML 테이블로 대체하여 ... 메뉴 원천 차단)
     # =====================================================
 
     st.markdown(
@@ -725,13 +711,57 @@ if nav == "⚡ 바로 기록하기":
                 ]
             ].reset_index(drop=True)
 
+            # HTML 테이블 생성
+            table_html = """
+            <style>
+                .custom-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 5px;
+                    margin-bottom: 10px;
+                    font-size: 14px;
+                }
+                .custom-table th {
+                    background-color: rgba(128, 128, 128, 0.12);
+                    padding: 10px;
+                    text-align: center;
+                    border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+                    font-weight: bold;
+                }
+                .custom-table td {
+                    padding: 10px;
+                    text-align: center;
+                    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+                }
+            </style>
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>시간</th>
+                        <th>항목</th>
+                        <th>횟수</th>
+                        <th>메모</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
 
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                hide_index=True
-            )
+            for _, row in display_df.iterrows():
+                table_html += f"""
+                    <tr>
+                        <td>{row['시간']}</td>
+                        <td>{row['항목']}</td>
+                        <td>{row['횟수']}회</td>
+                        <td>{row['메모'] if row['메모'] else '-'}</td>
+                    </tr>
+                """
 
+            table_html += """
+                </tbody>
+            </table>
+            """
+
+            st.markdown(table_html, unsafe_allow_html=True)
 
         else:
 
