@@ -2,7 +2,11 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 import calendar
+from zoneinfo import ZoneInfo
 
+# 한국 시간(KST) 기준 현재 시간 가져오기 함수
+def get_kst_now():
+    return datetime.now(ZoneInfo("Asia/Seoul"))
 
 # =========================================================
 # 페이지 설정
@@ -42,6 +46,8 @@ font_mapping = {
 # 세션 스테이트
 # =========================================================
 
+kst_now = get_kst_now()
+
 if "selected_font" not in st.session_state:
     st.session_state.selected_font = "CookieRun (발랄하고 둥글둥글)"
 
@@ -49,24 +55,24 @@ if "log_data" not in st.session_state:
     st.session_state.log_data = [
         {
             "id": 1,
-            "날짜": datetime.now().strftime("%Y-%m-%d"),
+            "날짜": kst_now.strftime("%Y-%m-%d"),
             "항목": "☕ 커피 마신 잔수",
             "횟수": 2,
             "메모": "아아 마심",
-            "시간": datetime.now().strftime("%H:%M:%S")
+            "시간": kst_now.strftime("%H:%M:%S")
         },
         {
             "id": 2,
-            "날짜": datetime.now().strftime("%Y-%m-%d"),
+            "날짜": kst_now.strftime("%Y-%m-%d"),
             "항목": "💪 운동 횟수",
             "횟수": 50,
             "메모": "스쿼트",
-            "시간": datetime.now().strftime("%H:%M:%S")
+            "시간": kst_now.strftime("%H:%M:%S")
         }
     ]
 
 if "selected_date" not in st.session_state:
-    st.session_state.selected_date = datetime.now().date()
+    st.session_state.selected_date = kst_now.date()
 
 if "is_editing" not in st.session_state:
     st.session_state.is_editing = False
@@ -466,10 +472,11 @@ if nav == "⚡ 바로 기록하기":
 
 
     # -----------------------------------------------------
-    # 오늘 날짜
+    # 오늘 날짜 (KST 기준)
     # -----------------------------------------------------
 
-    today_str = datetime.now().strftime(
+    current_kst = get_kst_now()
+    today_str = current_kst.strftime(
         "%Y년 %m월 %d일 (%a)"
     )
 
@@ -620,7 +627,8 @@ if nav == "⚡ 바로 기록하기":
 
         if submitted:
 
-            now_time = datetime.now().strftime(
+            save_kst = get_kst_now()
+            now_time = save_kst.strftime(
                 "%H:%M:%S"
             )
 
@@ -630,7 +638,7 @@ if nav == "⚡ 바로 기록하기":
                     st.session_state.log_data
                 ) + 1,
 
-                "날짜": datetime.now().strftime(
+                "날짜": save_kst.strftime(
                     "%Y-%m-%d"
                 ),
 
@@ -673,7 +681,7 @@ if nav == "⚡ 바로 기록하기":
         )
 
 
-        today_date_str = datetime.now().strftime(
+        today_date_str = get_kst_now().strftime(
             "%Y-%m-%d"
         )
 
@@ -758,7 +766,7 @@ elif nav == "📅 캘린더 (월간 보기)":
         selected_month = st.selectbox(
             "월",
             list(range(1, 13)),
-            index=datetime.now().month - 1
+            index=get_kst_now().month - 1
         )
 
 
@@ -901,9 +909,9 @@ elif nav == "📅 캘린더 (월간 보기)":
     st.markdown("---")
 
 
-    # =====================================================
+    # -----------------------------------------------------
     # 선택한 날짜
-    # =====================================================
+    # -----------------------------------------------------
 
     sel_date_str = (
         st.session_state.selected_date.strftime(
@@ -1074,7 +1082,8 @@ elif nav == "📅 캘린더 (월간 보기)":
 
                 if submit_added:
 
-                    now_time = datetime.now().strftime(
+                    save_kst = get_kst_now()
+                    now_time = save_kst.strftime(
                         "%H:%M:%S"
                     )
 
