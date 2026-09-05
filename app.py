@@ -65,7 +65,6 @@ if nav == "⚡ 바로 기록하기":
     today_str = datetime.now().strftime("%Y년 %m월 %d일 (%a)")
     st.markdown(f'<div class="today-banner">📅 오늘 날짜: {today_str}</div>', unsafe_allow_html=True)
 
-    # 세션 스테이트에 횟수 저장 변수가 없으면 초기화
     if 'current_count' not in st.session_state:
         st.session_state.current_count = 1
 
@@ -77,14 +76,10 @@ if nav == "⚡ 바로 기록하기":
         if category == "✨ 직접 입력":
             category = st.text_input("어떤 행동인가요?")
             
-        # 횟수 직접 입력 및 증감 버튼 영역
         st.write("📊 횟수 / 양 선택")
-        
-        # 직접 입력 필드
         count_input = st.number_input("직접 입력", min_value=1, value=int(st.session_state.current_count), step=1, label_visibility="collapsed")
         st.session_state.current_count = count_input
 
-        # 빠른 조절 버튼 레이아웃 (-10, -5, -1, +5, +10)
         c1, c2, c3, c4, c5 = st.columns(5)
         if c1.form_submit_button("-10", use_container_width=True):
             st.session_state.current_count = max(1, st.session_state.current_count - 10)
@@ -118,7 +113,7 @@ if nav == "⚡ 바로 기록하기":
             }
             st.session_state.log_data.append(new_entry)
             st.success(f"✅ 저장 완료! ({now_time})")
-            st.session_state.current_count = 1  # 초기화
+            st.session_state.current_count = 1
 
     st.markdown("### 📋 오늘의 실시간 기록")
     if st.session_state.log_data:
@@ -127,8 +122,8 @@ if nav == "⚡ 바로 기록하기":
         df_today = df[df["날짜"] == today_date_str]
         
         if not df_today.empty:
-            # 시간순으로 정렬해서 보여주기
-            display_df = df_today[["시간", "항목", "횟수", "메모"]].iloc[::-1].reset_index(drop=True)
+            # 먼저 기록한 것이 위로 오도록 정렬 (역순 정렬 제거)
+            display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
             st.dataframe(display_df, use_container_width=True)
         else:
             st.info("오늘 아직 기록된 내역이 없습니다.")
@@ -178,7 +173,6 @@ elif nav == "📅 캘린더 (월간 보기)":
 
     st.markdown("---")
 
-    # 선택한 날짜의 상세 팝업 영역 (하단 카드)
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
 
