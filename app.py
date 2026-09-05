@@ -271,8 +271,11 @@ st.markdown(
 
 
 # =========================================================
-# 상단 레이아웃
+# 상단 레이아웃 (캘린더 날짜 클릭 시 탭 유지 처리)
 # =========================================================
+
+if "cal_date" in st.query_params:
+    st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
 
 top_col1, top_col2 = st.columns([3, 1])
 
@@ -284,7 +287,8 @@ with top_col1:
             "📅 캘린더 (월간 보기)"
         ],
         horizontal=True,
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        key="nav_selection"
     )
 
 with top_col2:
