@@ -22,7 +22,7 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
-# 15가지 폰트 매핑
+# 15가지 폰트와 CSS 매핑
 font_mapping = {
     "CookieRun (발랄하고 둥글둥글)": "'CookieRun-Regular', sans-serif",
     "Jua (귀여운 둥근고딕)": "'Jua', sans-serif",
@@ -56,7 +56,6 @@ st.markdown(f"""
         font-style: normal;
     }}
 
-    /* 전체 앱에 선택된 폰트 적용 */
     html, body, p, span, div, label, input, textarea, select, 
     .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
         font-family: {current_font_css} !important;
@@ -97,23 +96,23 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 상단 레이아웃: 왼쪽은 화면 이동 탭, 오른쪽은 ⚙️ 설정 팝오버 버튼
-top_col1, top_col2 = st.columns([3, 1])
+# 상단 레이아웃: 화면 이동 탭
+nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
 
-with top_col1:
-    nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
-
-with top_col2:
-    # 우측 상단에 설정 팝오버(토글 버튼 형태) 배치
-    with st.popover("⚙️ 설정", use_container_width=True):
-        st.markdown("#### 🎨 앱 설정")
-        selected = st.selectbox(
-            "폰트 선택 (15종)", 
-            list(font_mapping.keys()), 
-            index=list(font_mapping.keys()).index(st.session_state.selected_font)
-        )
-        if selected != st.session_state.selected_font:
-            st.session_state.selected_font = selected
+# ⚙️ 설정 패널 (st.expander로 아이콘 깨짐 및 텍스트 겹침 문제 원천 해결)
+with st.expander("⚙️ 앱 설정 (글꼴 변경)"):
+    st.markdown("#### 🎨 15가지 글꼴 선택")
+    st.markdown("원하는 글꼴을 클릭하면 앱 전체에 즉시 적용됩니다.")
+    
+    # 각 글꼴별로 실제 해당 폰트 스타일을 적용한 버튼 나열
+    for font_name, font_css in font_mapping.items():
+        # 현재 선택된 폰트 표시
+        is_selected = (font_name == st.session_state.selected_font)
+        btn_label = f"✨ [적용됨] {font_name}" if is_selected else font_name
+        
+        # 개별 버튼에 해당 폰트를 인라인 스타일로 적용
+        if st.button(btn_label, key=f"font_btn_{font_name}", use_container_width=True):
+            st.session_state.selected_font = font_name
             st.rerun()
 
 st.markdown("---")
