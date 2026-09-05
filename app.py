@@ -6,9 +6,9 @@ import calendar
 # 페이지 설정
 st.set_page_config(page_title="모두의 기록 - 1초 간편 기록", page_icon="⚡", layout="centered")
 
-# 세션 스테이트 초기화 (선택한 폰트 저장용 포함)
+# 세션 스테이트 초기화
 if 'selected_font' not in st.session_state:
-    st.session_state.selected_font = "Pretendard (기본 모던)"
+    st.session_state.selected_font = "CookieRun (발랄하고 둥글둥글)"
 
 if 'log_data' not in st.session_state:
     st.session_state.log_data = [
@@ -22,25 +22,25 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
-# 폰트 스타일에 따른 CSS 매핑
+# 둥글둥글하고 부드러운 폰트 추가 및 매핑
 font_mapping = {
+    "CookieRun (발랄하고 둥글둥글)": "'CookieRun', sans-serif",
+    "IBM Plex Sans KR (부드러운 고딕)": "'IBM Plex Sans KR', sans-serif",
     "Pretendard (기본 모던)": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    "나눔스퀘어 (깔끔하고 단정한 고딕)": "'NanumSquare', sans-serif",
-    "Gmarket 산스 (젊고 트렌디한 둥근고딕)": "'GmarketSansMedium', sans-serif",
-    "RIDIBATANG (감성적인 명조체)": "'RIDIBatang', serif"
+    "나눔스퀘어 (깔끔하고 단정함)": "'NanumSquare', sans-serif"
 }
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# 동적으로 선택된 폰트가 적용되는 CSS 주입
+# Streamlit의 모든 컴포넌트(입력창, 버튼, 표, 라벨 등)에 폰트가 강제로 적용되도록 CSS 세분화
 st.markdown(f"""
     <style>
-    /* 구글 웹폰트 불러오기 (나눔스퀘어, 지마켓 산스, 리디바탕) */
-    @import url('https://fonts.googleapis.com/css2?family=Nanum+Square:wght@400;700&display=swap');
-    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
-    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff') format('woff');
+    /* 구글 웹폰트 및 눈누 폰트 불러오기 */
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;600&family=Nanum+Square:wght@400;700&display=swap');
+    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2209-2@1.0/CookieRun-Regular.woff2') format('woff2');
 
-    html, body, [class*="css"] {{
+    /* 앱 전체와 모든 위젯 내부 글꼴 강제 적용 */
+    html, body, [class*="css"], .stTextInput, .stSelectbox, .stNumberInput, .stButton, div, span, p, label {{
         font-family: {current_font_css} !important;
     }}
     
@@ -58,7 +58,7 @@ st.markdown(f"""
         background-color: rgba(33, 150, 243, 0.12);
         color: inherit;
         padding: 12px 15px;
-        border-radius: 10px;
+        border-radius: 12px;
         font-weight: 600;
         font-size: 15px;
         margin-bottom: 20px;
@@ -68,14 +68,14 @@ st.markdown(f"""
     .popup-box {{
         background-color: rgba(128, 128, 128, 0.08);
         padding: 20px;
-        border-radius: 12px;
+        border-radius: 15px;
         border: 1px solid rgba(128, 128, 128, 0.15);
         margin-top: 15px;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# 사이드바 또는 상단에서 폰트 선택 기능 제공
+# 사이드바 설정 메뉴
 with st.sidebar:
     st.markdown("### ⚙️ 앱 설정")
     selected = st.selectbox("앱 폰트 변경", list(font_mapping.keys()), index=list(font_mapping.keys()).index(st.session_state.selected_font))
@@ -260,7 +260,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 # 하단 광고 영역
 html_ad = """
-<div style="background-color: rgba(128, 128, 128, 0.08); padding: 15px; border-radius: 8px; text-align: center; color: #868e96; font-size: 13px; margin-top: 30px; border: 1px dashed rgba(128, 128, 128, 0.2);">
+<div style="background-color: rgba(128, 128, 128, 0.08); padding: 15px; border-radius: 12px; text-align: center; color: #868e96; font-size: 13px; margin-top: 30px; border: 1px dashed rgba(128, 128, 128, 0.2);">
     📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.
 </div>
 """
