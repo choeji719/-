@@ -120,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 모바일 좌우 스크롤 방지 CSS 적용
+# 모바일 좌우 스크롤 원천 차단 및 한 화면 맞춤 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -148,24 +148,24 @@ st.markdown(
 
 
     /* =====================================================
-       모바일 좌우 밀림/스크롤 현상 완전 차단
+       모바일 화면 좌우 밀림/스크롤 완벽 차단 (핵심)
        ===================================================== */
 
-    html, body {{
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{
+        width: 100% !important;
         max-width: 100vw !important;
         overflow-x: hidden !important;
-    }}
-
-    [data-testid="stAppViewContainer"] {{
-        max-width: 100vw !important;
-        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }}
 
     .main .block-container {{
         max-width: 100% !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        width: 100% !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 1rem !important;
         overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }}
 
 
@@ -187,6 +187,7 @@ st.markdown(
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         gap: 2px !important;
+        width: 100% !important;
     }}
 
     [data-testid="column"] {{
@@ -198,8 +199,8 @@ st.markdown(
     [data-testid="column"] button {{
         width: 100% !important;
         padding: 6px 0px !important;
-        font-size: 12px !important;
-        min-height: 34px !important;
+        font-size: 11px !important;
+        min-height: 32px !important;
         white-space: nowrap !important;
     }}
 
@@ -220,11 +221,11 @@ st.markdown(
 
 
     /* =====================================================
-       제목
+       제목 및 컨테이너
        ===================================================== */
 
     .main-title {{
-        font-size: 22px;
+        font-size: 20px;
         font-weight: bold;
         margin-bottom: 0px;
     }}
@@ -232,23 +233,19 @@ st.markdown(
 
     .sub-desc {{
         color: gray;
-        font-size: 12px;
-        margin-bottom: 15px;
+        font-size: 11px;
+        margin-bottom: 12px;
     }}
 
-
-    /* =====================================================
-       오늘 날짜
-       ===================================================== */
 
     .today-banner {{
         background-color: rgba(33, 150, 243, 0.12);
         color: inherit;
-        padding: 10px 12px;
+        padding: 10px 10px;
         border-radius: 10px;
         font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 15px;
+        font-size: 13px;
+        margin-bottom: 12px;
         text-align: center;
         border: 1px solid rgba(33, 150, 243, 0.2);
     }}
@@ -259,7 +256,7 @@ st.markdown(
        ===================================================== */
 
     [data-testid="stPopoverBody"] {{
-        width: 320px !important;
+        width: 300px !important;
         max-width: 90vw !important;
     }}
 
@@ -280,19 +277,19 @@ st.markdown(
        ===================================================== */
 
     .font-title {{
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
-        margin-top: 8px;
-        margin-bottom: 8px;
+        margin-top: 6px;
+        margin-bottom: 6px;
     }}
 
 
     .current-font {{
         background-color: rgba(128, 128, 128, 0.09);
-        padding: 9px 12px;
-        border-radius: 9px;
-        margin-bottom: 12px;
-        font-size: 14px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 13px;
     }}
 
 
@@ -302,10 +299,10 @@ st.markdown(
 
     .popup-box {{
         background-color: rgba(128, 128, 128, 0.08);
-        padding: 15px;
-        border-radius: 12px;
+        padding: 12px;
+        border-radius: 10px;
         border: 1px solid rgba(128, 128, 128, 0.15);
-        margin-top: 15px;
+        margin-top: 12px;
     }}
 
     </style>
@@ -465,7 +462,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일 한 화면 최적화 캘린더)
+# 2. 캘린더 (모바일 한 화면 밀림 방지 최적화)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -494,7 +491,7 @@ elif nav == "📅 캘린더 (월간 보기)":
     cols = st.columns(7)
     for i, day_name in enumerate(weekdays):
         cols[i].markdown(
-            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 12px;'>{day_name}</div>",
+            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 11px;'>{day_name}</div>",
             unsafe_allow_html=True
         )
 
@@ -627,12 +624,12 @@ elif nav == "📅 캘린더 (월간 보기)":
 html_ad = """
 <div style="
     background-color: rgba(128, 128, 128, 0.08);
-    padding: 12px;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 8px;
     text-align: center;
     color: #868e96;
-    font-size: 12px;
-    margin-top: 25px;
+    font-size: 11px;
+    margin-top: 20px;
     border: 1px dashed rgba(128, 128, 128, 0.2);
 ">
     📢 [광고 영역] 구글 애드센스 배너가 들어갈 자리입니다.
