@@ -429,7 +429,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (아이폰 스타일 7열 그리드 캘린더)
+# 2. 캘린더 (아이폰 스타일 일요일 시작 7열 그리드 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -463,8 +463,9 @@ elif nav == "📅 캘린더 (월간 보기)":
         except Exception:
             pass
 
-    # 일요일 시작으로 캘린더 생성 (firstweekday=6)
-    cal = calendar.Calendar(firstweekday=6).monthcalendar(selected_year, selected_month)
+    # 일요일 시작으로 캘린더 생성 (firstweekday=6 설정 적용)
+    cal_obj = calendar.Calendar(firstweekday=6)
+    cal = cal_obj.monthcalendar(selected_year, selected_month)
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
