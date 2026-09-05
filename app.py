@@ -468,35 +468,36 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 아이폰 캘린더 스타일 CSS (테두리 제거, 원형 선택 효과, 미니멀한 디자인)
+    # 아이폰 스타일 캘린더 CSS (완전한 미니멀 원형 디자인 및 고정 높이 제거)
     cal_html = """
     <style>
-    .iphone-cal { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 15px; }
-    .iphone-cal th { text-align: center; font-weight: 500; padding: 6px 0; font-size: 12px; }
+    .iphone-cal-wrap { width: 100%; margin-bottom: 10px; }
+    .iphone-cal { width: 100%; border-collapse: collapse; table-layout: fixed; border: none !important; background: transparent !important; }
+    .iphone-cal th { text-align: center; font-weight: 500; padding: 4px 0 8px 0; font-size: 12px; border: none !important; background: transparent !important; }
     .iphone-cal th:first-child { color: #ff4d4f; }
     .iphone-cal th:last-child { color: #1890ff; }
     .iphone-cal th:not(:first-child):not(:last-child) { color: #868e96; }
-    .iphone-cal td { text-align: center; padding: 6px 2px; vertical-align: middle; }
+    .iphone-cal td { text-align: center; padding: 3px 0; vertical-align: middle; border: none !important; background: transparent !important; }
     
     .day-cell {
-        display: flex;
+        display: inline-flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 40px;
+        width: 32px;
+        height: 32px;
         background-color: transparent;
         border: none;
         border-radius: 50%;
         color: inherit;
         text-decoration: none;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 400;
         margin: 0 auto;
         transition: background-color 0.2s;
     }
     .day-cell:hover {
-        background-color: rgba(128, 128, 128, 0.1);
+        background-color: rgba(128, 128, 128, 0.15);
     }
     .day-cell.selected {
         background-color: #ff3b30 !important;
@@ -506,16 +507,17 @@ elif nav == "📅 캘린더 (월간 보기)":
     .sun { color: #ff4d4f !important; }
     .sat { color: #1890ff !important; }
     .dot {
-        width: 4px;
-        height: 4px;
+        width: 3px;
+        height: 3px;
         background-color: #ff3b30;
         border-radius: 50%;
-        margin-top: 2px;
+        margin-top: 1px;
     }
     .day-cell.selected .dot {
         background-color: white !important;
     }
     </style>
+    <div class="iphone-cal-wrap">
     <table class='iphone-cal'><thead><tr>
     """
     for w in weekdays:
@@ -533,7 +535,7 @@ elif nav == "📅 캘린더 (월간 보기)":
                 if not df_all.empty and "날짜" in df_all.columns:
                     has_log = not df_all[df_all["날짜"] == cur_d_str].empty
                 
-                dot_html = "<div class='dot'></div>" if has_log else "<div style='height: 4px; margin-top: 2px;'></div>"
+                dot_html = "<div class='dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
                 btn_cls = "day-cell selected" if cur_d_str == sel_date_str else "day-cell"
                 
                 day_cls = ""
@@ -544,7 +546,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
                 cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
         cal_html += "</tr>"
-    cal_html += "</tbody></table>"
+    cal_html += "</tbody></table></div>"
 
     st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
