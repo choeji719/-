@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 import calendar
-from zoneinfo import ZoneInfo
+from zoneinfo :: ZoneInfo
 
 # 한국 시간(KST) 기준 현재 시간 가져오기 함수
 def get_kst_now():
@@ -153,21 +153,6 @@ st.markdown(
 
     [data-testid="stSidebar"] {{
         display: none;
-    }}
-
-
-    /* =====================================================
-       데이터프레임 우측 상단 (...) 툴바 버튼 및 오버레이 완벽 제거
-       ===================================================== */
-
-    [data-testid="stDataFrameToolbar"],
-    div[data-testid="stElementToolbar"],
-    [data-testid="stElementToolbarButton"],
-    button[kind="headerButton"] {{
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
     }}
 
 
@@ -690,7 +675,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # =====================================================
-    # 오늘의 기록 (깔끔한 기본 표 형태 복원 및 ... 툴바 제거)
+    # 오늘의 기록 (마크다운 표 형식으로 깔끔하게 출력)
     # =====================================================
 
     st.markdown(
@@ -726,13 +711,13 @@ if nav == "⚡ 바로 기록하기":
                 ]
             ].reset_index(drop=True)
 
+            # 마크다운 표 생성 (툴바 ... 메뉴가 생기지 않음)
+            markdown_table = "| 시간 | 항목 | 횟수 | 메모 |\n| :---: | :---: | :---: | :---: |\n"
+            for _, row in display_df.iterrows():
+                memo_val = row['메모'] if row['메모'] else '-'
+                markdown_table += f"| {row['시간']} | {row['항목']} | {row['횟수']}회 | {memo_val} |\n"
 
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                hide_index=True
-            )
-
+            st.markdown(markdown_table)
 
         else:
 
