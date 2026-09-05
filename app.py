@@ -83,7 +83,7 @@ if "current_count" not in st.session_state:
 if "nav_selection" not in st.session_state:
     st.session_state.nav_selection = "⚡ 바로 기록하기"
 
-# 캘린더 날짜 클릭 시 탭 이동 처리 및 쿼리 파라미터 정리(고착화 방지)
+# 캘린더 날짜 클릭 시 탭 이동 처리 및 쿼리 파라미터 정리
 if "cal_date" in st.query_params:
     try:
         clicked_date_str = st.query_params["cal_date"]
@@ -139,7 +139,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 모바일 좌우 밀림 완전 차단 CSS 적용
+# 전체 앱 스타일 및 부드러운 전환(Fade-in) 애니메이션 적용
 # =========================================================
 
 st.markdown(
@@ -167,8 +167,13 @@ st.markdown(
 
 
     /* =====================================================
-        모바일 화면 좌우 밀림/스크롤 완벽 차단
+        화면 전환 깜빡임 방지용 부드러운 페이드인 애니메이션
         ===================================================== */
+
+    @keyframes fadeIn {{
+        from {{ opacity: 0.3; }}
+        to {{ opacity: 1; }}
+    }}
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {{
         width: 100% !important;
@@ -177,6 +182,7 @@ st.markdown(
         box-sizing: border-box !important;
         margin: 0 !important;
         padding: 0 !important;
+        animation: fadeIn 0.25s ease-in-out !important;
     }}
 
     .block-container {{
