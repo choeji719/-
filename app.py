@@ -427,7 +427,15 @@ if nav == "⚡ 바로 기록하기":
 
         if not df_today.empty:
             display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
-            st.dataframe(display_df, use_container_width=True, hide_index=True)
+            
+            # [핵심] 툴바/메뉴(...)가 절대 생기지 않는 깔끔한 HTML 표 렌더링
+            table_html = "<style>.log-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:5px;margin-bottom:10px;font-size:13px;}.log-table th{background-color:rgba(128,128,128,0.12);padding:8px 4px;text-align:center;border-bottom:2px solid rgba(128,128,128,0.2);font-weight:bold;}.log-table td{padding:8px 4px;text-align:center;border-bottom:1px solid rgba(128,128,128,0.1);word-break:break-all;}</style><table class='log-table'><thead><tr><th>시간</th><th>항목</th><th>횟수</th><th>메모</th></tr></thead><tbody>"
+            for _, row in display_df.iterrows():
+                memo_val = row['메모'] if row['메모'] else '-'
+                table_html += f"<tr><td>{row['시간']}</td><td>{row['항목']}</td><td>{row['횟수']}회</td><td>{memo_val}</td></tr>"
+            table_html += "</tbody></table>"
+            
+            st.markdown(table_html, unsafe_allow_html=True)
         else:
             st.info("오늘 아직 기록된 내역이 없습니다.")
     else:
@@ -473,7 +481,6 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 모바일과 PC 모두에서 줄바꿈 없이 가로 7열로 딱 맞는 압축형 HTML 달력
     cal_html = "<style>.ct{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:15px;}.ct th{text-align:center;font-weight:bold;color:#868e96;padding:8px 0;font-size:12px;}.ct td{text-align:center;padding:3px;vertical-align:middle;}.cb{display:block;width:100%;padding:10px 0;background-color:rgba(128,128,128,0.06);border:1px solid rgba(128,128,128,0.15);border-radius:6px;color:inherit;text-decoration:none;font-size:13px;font-weight:500;}.cb:hover{background-color:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.4);}.cb.selected{background-color:rgba(33,150,243,0.25);border-color:#2196F3;font-weight:bold;}</style><table class='ct'><thead><tr>"
     for w in weekdays:
         cal_html += f"<th>{w}</th>"
@@ -500,7 +507,6 @@ elif nav == "📅 캘린더 (월간 보기)":
 
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
 
-    # 의미불명의 빈 박스(컨테이너)를 제거하고 깔끔하게 렌더링
     st.markdown('<div class="popup-box">', unsafe_allow_html=True)
 
     if not df_all.empty and "날짜" in df_all.columns:
