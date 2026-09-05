@@ -43,7 +43,7 @@ font_mapping = {
 
 
 # =========================================================
-# 세션 스테이트 초기화 및 쿼리 파라미터 처리
+# 세션 스테이트 초기화
 # =========================================================
 
 kst_now = get_kst_now()
@@ -82,22 +82,6 @@ if "current_count" not in st.session_state:
 
 if "nav_selection" not in st.session_state:
     st.session_state.nav_selection = "⚡ 바로 기록하기"
-
-# 캘린더 날짜 클릭 시 탭 이동 처리 및 쿼리 파라미터 정리
-if "cal_date" in st.query_params:
-    try:
-        clicked_date_str = st.query_params["cal_date"]
-        if isinstance(clicked_date_str, list):
-            clicked_date_str = clicked_date_str[0]
-        st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
-        st.session_state.is_editing = False
-        st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-    except Exception:
-        pass
-    st.query_params.clear()
-elif st.query_params.get("tab") == "cal":
-    st.session_state.nav_selection = "📅 캘린더 (월간 보기)"
-    st.query_params.clear()
 
 
 # =========================================================
@@ -139,7 +123,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 부드러운 전환(Fade) 효과 적용
+# 전체 앱 스타일 및 모바일 좌우 밀림 완전 차단 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -167,7 +151,7 @@ st.markdown(
 
 
     /* =====================================================
-        모바일 화면 좌우 밀림/스크롤 완벽 차단 및 부드러운 등장
+        모바일 화면 좌우 밀림/스크롤 완벽 차단
         ===================================================== */
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {{
@@ -177,8 +161,6 @@ st.markdown(
         box-sizing: border-box !important;
         margin: 0 !important;
         padding: 0 !important;
-        opacity: 1;
-        transition: opacity 0.2s ease-in-out;
     }}
 
     .block-container {{
@@ -202,7 +184,7 @@ st.markdown(
 
 
     /* =====================================================
-        마크다운 제목 링크 차단 (캘린더 링크는 제외)
+        마크다운 제목 링크 차단
         ===================================================== */
 
     .stMarkdown a.header-anchor, 
@@ -492,7 +474,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (아이폰 스타일 표 캘린더 & 부드러운 전환 인터랙션)
+# 2. 캘린더 (아이폰 스타일 네이티브 상태 연동 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -519,127 +501,99 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 아이폰 스타일 캘린더 디자인 원본 CSS 및 깜빡임 방지 페이드 아웃 스크립트
-    cal_html = """
+    # 기존 아이폰 캘린더 디자인을 완벽히 재현하는 네이티브 버튼 스타일 CSS
+    st.markdown("""
     <style>
-    .iphone-table-container {
-        width: 100% !important;
-        overflow-x: hidden !important;
-    }
-    .iphone-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        table-layout: fixed !important;
-        margin-bottom: 15px !important;
-        background: transparent !important;
-        border: none !important;
-    }
-    .iphone-table th {
+    .cal-header-cell {
         text-align: center !important;
         font-weight: 500 !important;
-        padding: 6px 0 10px 0 !important;
         font-size: 12px !important;
-        border: none !important;
-        background: transparent !important;
+        padding: 6px 0 10px 0 !important;
     }
-    .iphone-table th:nth-child(1) { color: #ff3b30 !important; }
-    .iphone-table th:nth-child(7) { color: #007aff !important; }
-    .iphone-table th:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93 !important; }
+    .cal-header-cell:nth-child(1) { color: #ff3b30 !important; }
+    .cal-header-cell:nth-child(7) { color: #007aff !important; }
+    .cal-header-cell:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93 !important; }
 
-    .iphone-table td {
-        text-align: center !important;
-        padding: 6px 0 !important;
-        vertical-align: middle !important;
-        border: none !important;
-        background: transparent !important;
+    div[data-testid="column"] {
+        padding: 0 !important;
+        flex: 1 !important;
     }
-
-    .iphone-cell {
-        display: inline-flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
+    div[data-testid="column"] button {
         width: 34px !important;
         height: 34px !important;
-        background-color: transparent !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
         border-radius: 50% !important;
-        color: inherit !important;
-        text-decoration: none !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: transparent !important;
+        border: none !important;
         font-size: 14px !important;
         font-weight: 400 !important;
-        margin: 0 auto !important;
-        pointer-events: auto !important;
+        box-shadow: none !important;
+        color: inherit !important;
     }
-    .iphone-cell:hover {
+    div[data-testid="column"] button:hover {
         background-color: rgba(128, 128, 128, 0.2) !important;
+        border: none !important;
     }
-    .iphone-cell.selected {
+    div[data-testid="column"] button:focus {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .selected-btn button {
         background-color: #ff3b30 !important;
         color: #ffffff !important;
         font-weight: bold !important;
     }
-    
-    .ios-sun { color: #ff3b30 !important; }
-    .ios-sat { color: #007aff !important; }
-    
-    .ios-dot {
-        width: 3px !important;
-        height: 3px !important;
-        background-color: #ff3b30 !important;
-        border-radius: 50% !important;
-        margin-top: 1px !important;
-    }
-    .iphone-cell.selected .ios-dot {
-        background-color: #ffffff !important;
-    }
+    .sun-btn button { color: #ff3b30 !important; }
+    .sat-btn button { color: #007aff !important; }
     </style>
+    """, unsafe_allow_html=True)
 
-    <div class="iphone-table-container">
-    <table class='iphone-table'>
-        <thead>
-            <tr>
-    """
-    for w in weekdays:
-        cal_html += f"<th>{w}</th>"
-    cal_html += "</tr></thead><tbody>"
+    head_cols = st.columns(7)
+    for idx, w in enumerate(weekdays):
+        head_cols[idx].markdown(f"<div class='cal-header-cell'>{w}</div>", unsafe_allow_html=True)
 
     for week in cal:
-        cal_html += "<tr>"
+        cols = st.columns(7)
         for day_idx, day in enumerate(week):
-            if day == 0:
-                cal_html += "<td></td>"
-            else:
-                cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
-                has_log = False
-                if not df_all.empty and "날짜" in df_all.columns:
-                    has_log = not df_all[df_all["날짜"] == cur_d_str].empty
-                
-                dot_html = "<div class='ios-dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
-                btn_cls = "iphone-cell selected" if cur_d_str == sel_date_str else "iphone-cell"
-                
-                day_cls = ""
-                if day_idx == 0:
-                    day_cls = " ios-sun"
-                elif day_idx == 6:
-                    day_cls = " ios-sat"
+            with cols[day_idx]:
+                if day != 0:
+                    cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
+                    has_log = False
+                    if not df_all.empty and "날짜" in df_all.columns:
+                        has_log = not df_all[df_all["날짜"] == cur_d_str].empty
+                    
+                    is_selected = (cur_d_str == sel_date_str)
+                    
+                    btn_cls = ""
+                    if is_selected:
+                        btn_cls = "selected-btn"
+                    elif day_idx == 0:
+                        btn_cls = "sun-btn"
+                    elif day_idx == 6:
+                        btn_cls = "sat-btn"
 
-                cal_html += f"<td><a href='?cal_date={cur_d_str}&tab=cal' target='_self' class='{btn_cls}' id='date_{cur_d_str}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
-        cal_html += "</tr>"
-    cal_html += "</tbody></table></div>"
+                    st.markdown(f'<div class="{btn_cls}">', unsafe_allow_html=True)
+                    if st.button(str(day), key=f"day_btn_{cur_d_str}", use_container_width=True):
+                        st.session_state.selected_date = datetime.strptime(cur_d_str, "%Y-%m-%d").date()
+                        st.session_state.is_editing = False
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-    # 날짜 클릭 시 하얀 화면 깜빡임 대신 부드럽게 페이드아웃 되도록 가려주는 자바스크립트
-    cal_html += """
-    <script>
-    document.querySelectorAll('.iphone-cell').forEach(function(cell) {
-        cell.addEventListener('click', function(e) {
-            document.body.style.opacity = '0';
-        });
-    });
-    </script>
-    """
+                    dot_color = "#ffffff" if is_selected else "#ff3b30"
+                    dot_visibility = "visible" if has_log else "hidden"
+                    st.markdown(f"""
+                    <div style='text-align: center; margin-top: 1px;'>
+                        <div style='width: 3px; height: 3px; background-color: {dot_color}; border-radius: 50%; margin: 0 auto; visibility: {dot_visibility};'>•</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-    st.markdown(cal_html, unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown("<br>---", unsafe_allow_html=True)
 
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
 
