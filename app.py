@@ -127,7 +127,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 모바일 최적화 CSS 적용
+# 전체 앱 스타일 및 모바일 좌우 밀림 완전 차단 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -158,14 +158,16 @@ st.markdown(
         모바일 화면 좌우 밀림/스크롤 완벽 차단
         ===================================================== */
 
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {{
         width: 100% !important;
         max-width: 100vw !important;
         overflow-x: hidden !important;
         box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }}
 
-    .main .block-container {{
+    .block-container {{
         max-width: 100% !important;
         width: 100% !important;
         padding-left: 0.75rem !important;
@@ -422,11 +424,52 @@ if nav == "⚡ 바로 기록하기":
         if not df_today.empty:
             display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
             
-            table_html = "<style>.log-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:5px;margin-bottom:10px;font-size:13px;}.log-table th{background-color:rgba(128,128,128,0.12);padding:8px 4px;text-align:center;border-bottom:2px solid rgba(128,128,128,0.2);font-weight:bold;}.log-table td{padding:8px 4px;text-align:center;border-bottom:1px solid rgba(128,128,128,0.1);word-break:break-all;}</style><table class='log-table'><thead><tr><th>시간</th><th>항목</th><th>횟수</th><th>메모</th></tr></thead><tbody>"
+            # 오늘의 실시간 기록 표: 링크나 클릭 기능 없는 순수 정적 테이블
+            table_html = """
+            <style>
+            .log-table-container {
+                width: 100% !important;
+                overflow-x: hidden !important;
+            }
+            .log-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
+                margin-top: 5px !important;
+                margin-bottom: 10px !important;
+                font-size: 13px !important;
+            }
+            .log-table th {
+                background-color: rgba(128, 128, 128, 0.12);
+                padding: 8px 4px;
+                text-align: center;
+                border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+                font-weight: bold;
+                word-break: break-all;
+            }
+            .log-table td {
+                padding: 8px 4px;
+                text-align: center;
+                border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+                word-break: break-all;
+            }
+            </style>
+            <div class="log-table-container">
+            <table class='log-table'>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">시간</th>
+                        <th style="width: 30%;">항목</th>
+                        <th style="width: 20%;">횟수</th>
+                        <th style="width: 25%;">메모</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
             for _, row in display_df.iterrows():
                 memo_val = row['메모'] if row['메모'] else '-'
                 table_html += f"<tr><td>{row['시간']}</td><td>{row['항목']}</td><td>{row['횟수']}회</td><td>{memo_val}</td></tr>"
-            table_html += "</tbody></table>"
+            table_html += "</tbody></table></div>"
             
             st.markdown(table_html, unsafe_allow_html=True)
         else:
@@ -475,9 +518,13 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 아이폰 스타일 캘린더 CSS 및 링크 표시 보장 (tab=cal 추가)
+    # 아이폰 스타일 캘린더 CSS (캘린더 날짜만 클릭 가능하도록 유지)
     cal_html = """
     <style>
+    .iphone-table-container {
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
     .iphone-table {
         width: 100% !important;
         border-collapse: collapse !important;
@@ -546,6 +593,7 @@ elif nav == "📅 캘린더 (월간 보기)":
     }
     </style>
 
+    <div class="iphone-table-container">
     <table class='iphone-table'>
         <thead>
             <tr>
@@ -576,7 +624,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
                 cal_html += f"<td><a href='?cal_date={cur_d_str}&tab=cal' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
         cal_html += "</tr>"
-    cal_html += "</tbody></table>"
+    cal_html += "</tbody></table></div>"
 
     st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
