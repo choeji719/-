@@ -675,7 +675,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # =====================================================
-    # 오늘의 기록 (HTML 테이블로 대체하여 ... 메뉴 원천 차단)
+    # 오늘의 기록 (완전한 HTML 테이블 구조)
     # =====================================================
 
     st.markdown(
@@ -711,28 +711,38 @@ if nav == "⚡ 바로 기록하기":
                 ]
             ].reset_index(drop=True)
 
-            # HTML 테이블 생성
-            table_html = """
+            table_rows = ""
+            for _, row in display_df.iterrows():
+                table_rows += f"""
+                    <tr>
+                        <td>{row['시간']}</td>
+                        <td>{row['항목']}</td>
+                        <td>{row['횟수']}회</td>
+                        <td>{row['메모'] if row['메모'] else '-'}</td>
+                    </tr>
+                """
+
+            table_html = f"""
             <style>
-                .custom-table {
+                .custom-table {{
                     width: 100%;
                     border-collapse: collapse;
                     margin-top: 5px;
                     margin-bottom: 10px;
                     font-size: 14px;
-                }
-                .custom-table th {
+                }}
+                .custom-table th {{
                     background-color: rgba(128, 128, 128, 0.12);
                     padding: 10px;
                     text-align: center;
                     border-bottom: 2px solid rgba(128, 128, 128, 0.2);
                     font-weight: bold;
-                }
-                .custom-table td {
+                }}
+                .custom-table td {{
                     padding: 10px;
                     text-align: center;
                     border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-                }
+                }}
             </style>
             <table class="custom-table">
                 <thead>
@@ -744,19 +754,7 @@ if nav == "⚡ 바로 기록하기":
                     </tr>
                 </thead>
                 <tbody>
-            """
-
-            for _, row in display_df.iterrows():
-                table_html += f"""
-                    <tr>
-                        <td>{row['시간']}</td>
-                        <td>{row['항목']}</td>
-                        <td>{row['횟수']}회</td>
-                        <td>{row['메모'] if row['메모'] else '-'}</td>
-                    </tr>
-                """
-
-            table_html += """
+                    {table_rows}
                 </tbody>
             </table>
             """
