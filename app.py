@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, date
 import calendar
 
-# 페이지 설정
+# 페이지 설정 (사이드바가 필요 없으므로 wide 대신 centered 유지)
 st.set_page_config(page_title="모두의 기록 - 1초 간편 기록", page_icon="⚡", layout="centered")
 
 # 세션 스테이트 초기화
@@ -22,7 +22,7 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
-# 15가지 폰트와 각각의 실제 CSS 폰트 가족 이름 매핑
+# 15가지 폰트 매핑
 font_mapping = {
     "CookieRun (발랄하고 둥글둥글)": "'CookieRun-Regular', sans-serif",
     "Jua (귀여운 둥근고딕)": "'Jua', sans-serif",
@@ -43,7 +43,7 @@ font_mapping = {
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# CSS 주입: 폰트 적용 + 깨지는 사이드바 아이콘 텍스트 숨기기 + 드롭다운 항목별 폰트 실시간 반영
+# CSS 주입 (사이드바 숨기기 코드 포함하여 깨진 텍스트 원천 차단)
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap');
@@ -56,24 +56,15 @@ st.markdown(f"""
         font-style: normal;
     }}
 
-    /* 앱 전체 본문, 버튼, 입력창에 선택된 폰트 적용 */
+    /* 전체 앱에 선택된 폰트 적용 */
     html, body, p, span, div, label, input, textarea, select, 
     .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
         font-family: {current_font_css} !important;
     }}
-
-    /* 1. 사이드바 상단 깨지는 'keyboard_double' 텍스트 숨기기 */
-    [data-testid="stSidebarNav"] span, button[kind="header"] span {{
-        /* 시스템 아이콘 텍스트 노출 방지 */
-    }}
-    /* Streamlit 내부 특정 아이콘 대체 숨김 처리 */
-    div[data-testid="collapsedControl"] svg {{
-        display: inline-block;
-    }}
-
-    /* 2. 드롭다운(셀렉트박스) 목록 내부의 텍스트도 해당 폰트로 보이게 설정 */
-    div[data-baseweb="select"] span, div[data-baseweb="popover"] div {{
-        font-family: {current_font_css} !important;
+    
+    /* 사이드바 자체를 화면에서 완전히 숨겨서 keyboard_double 오류 원천 차단 */
+    [data-testid="stSidebar"] {{
+        display: none;
     }}
 
     .main-title {{
@@ -107,20 +98,23 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 사이드바 설정 메뉴
-with st.sidebar:
-    st.markdown("### ⚙️ 앱 설정")
+# 메인 상단에 폰트 선택 및 화면 이동 메뉴 배치
+top_col1, top_col2 = st.columns([2, 1])
+
+with top_col1:
+    nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
+
+with top_col2:
     selected = st.selectbox(
-        "앱 폰트 변경 (15종)", 
+        "폰트 변경", 
         list(font_mapping.keys()), 
-        index=list(font_mapping.keys()).index(st.session_state.selected_font)
+        index=list(font_mapping.keys()).index(st.session_state.selected_font),
+        label_visibility="collapsed"
     )
     if selected != st.session_state.selected_font:
         st.session_state.selected_font = selected
         st.rerun()
 
-# 상단 네비게이션
-nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
 # 1. 바로 기록하기 화면
