@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 import calendar
-from urllib.parse import quote
 
 
 # =========================================================
@@ -46,6 +45,9 @@ font_mapping = {
 if "selected_font" not in st.session_state:
     st.session_state.selected_font = "CookieRun (발랄하고 둥글둥글)"
 
+if "settings_open" not in st.session_state:
+    st.session_state.settings_open = False
+
 if "log_data" not in st.session_state:
     st.session_state.log_data = [
         {
@@ -77,53 +79,39 @@ if "current_count" not in st.session_state:
 
 
 # =========================================================
-# URL로 전달된 폰트 선택 처리
-#
-# 커스텀 폰트 목록의 항목을 클릭하면
-# ?font=... 형태로 페이지가 다시 열리고,
-# 아래에서 선택된 폰트를 세션에 반영한다.
-# =========================================================
-
-font_from_url = st.query_params.get("font")
-
-if font_from_url in font_mapping:
-    st.session_state.selected_font = font_from_url
-    st.query_params.clear()
-
-
-# =========================================================
 # 현재 선택된 폰트
 # =========================================================
 
 current_font_css = font_mapping.get(
     st.session_state.selected_font,
-    "-apple-system, sans-serif"
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 )
 
 
 # =========================================================
-# Google Fonts + CookieRun
+# 폰트 불러오기
 # =========================================================
 
 st.markdown(
     """
     <style>
 
-    /* =====================================================
+    /* -----------------------------------------------------
        Google Fonts
-       ===================================================== */
+       ----------------------------------------------------- */
 
     @import url(
         'https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap'
     );
 
 
-    /* =====================================================
+    /* -----------------------------------------------------
        CookieRun
-       ===================================================== */
+       ----------------------------------------------------- */
 
     @font-face {
         font-family: 'CookieRun-Regular';
+
         src: url(
             'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2209-2@1.0/CookieRun-Regular.woff2'
         ) format('woff2');
@@ -139,7 +127,7 @@ st.markdown(
 
 
 # =========================================================
-# 현재 선택된 폰트를 전체 앱에 적용
+# 전체 앱 폰트 적용
 # =========================================================
 
 st.markdown(
@@ -164,18 +152,18 @@ st.markdown(
     }}
 
 
-    /* =====================================================
-       사이드바 제거
-       ===================================================== */
+    /* -----------------------------------------------------
+       사이드바 숨김
+       ----------------------------------------------------- */
 
     [data-testid="stSidebar"] {{
         display: none;
     }}
 
 
-    /* =====================================================
+    /* -----------------------------------------------------
        메인 제목
-       ===================================================== */
+       ----------------------------------------------------- */
 
     .main-title {{
         font-size: 24px;
@@ -184,9 +172,9 @@ st.markdown(
     }}
 
 
-    /* =====================================================
+    /* -----------------------------------------------------
        설명
-       ===================================================== */
+       ----------------------------------------------------- */
 
     .sub-desc {{
         color: gray;
@@ -195,9 +183,9 @@ st.markdown(
     }}
 
 
-    /* =====================================================
+    /* -----------------------------------------------------
        오늘 날짜 배너
-       ===================================================== */
+       ----------------------------------------------------- */
 
     .today-banner {{
         background-color: rgba(33, 150, 243, 0.12);
@@ -212,9 +200,78 @@ st.markdown(
     }}
 
 
-    /* =====================================================
-       캘린더 기록 팝업 박스
-       ===================================================== */
+    /* -----------------------------------------------------
+       설정 버튼
+       ----------------------------------------------------- */
+
+    .settings-button-area {{
+        display: flex;
+        justify-content: flex-end;
+    }}
+
+
+    /* -----------------------------------------------------
+       설정 패널
+       ----------------------------------------------------- */
+
+    .settings-panel {{
+        background-color: rgba(128, 128, 128, 0.06);
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid rgba(128, 128, 128, 0.20);
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }}
+
+
+    /* -----------------------------------------------------
+       현재 선택된 폰트 표시
+       ----------------------------------------------------- */
+
+    .current-font-box {{
+        background-color: rgba(128, 128, 128, 0.10);
+        padding: 12px 14px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        font-size: 15px;
+    }}
+
+
+    /* -----------------------------------------------------
+       폰트 미리보기 박스
+       ----------------------------------------------------- */
+
+    .font-preview-box {{
+        background-color: rgba(128, 128, 128, 0.07);
+
+        border: 1px solid rgba(128, 128, 128, 0.16);
+
+        border-radius: 10px;
+
+        padding: 10px 12px;
+
+        min-height: 48px;
+
+        display: flex;
+
+        align-items: center;
+    }}
+
+
+    /* -----------------------------------------------------
+       선택된 폰트 미리보기
+       ----------------------------------------------------- */
+
+    .font-preview-selected {{
+        background-color: rgba(33, 150, 243, 0.12);
+
+        border: 1px solid rgba(33, 150, 243, 0.45);
+    }}
+
+
+    /* -----------------------------------------------------
+       캘린더 기록 박스
+       ----------------------------------------------------- */
 
     .popup-box {{
         background-color: rgba(128, 128, 128, 0.08);
@@ -222,127 +279,6 @@ st.markdown(
         border-radius: 15px;
         border: 1px solid rgba(128, 128, 128, 0.15);
         margin-top: 15px;
-    }}
-
-
-    /* =====================================================
-       설정 Popover의 expand_more 아이콘 제거
-       ===================================================== */
-
-    [data-testid="stPopover"] > button svg {{
-        display: none !important;
-    }}
-
-    [data-testid="stPopover"] > button [data-testid="stIconMaterial"] {{
-        display: none !important;
-    }}
-
-    [data-testid="stPopover"] > button .material-symbols-rounded {{
-        display: none !important;
-    }}
-
-    [data-testid="stPopover"] > button .material-symbols-outlined {{
-        display: none !important;
-    }}
-
-
-    /* =====================================================
-       설정 버튼 정렬
-       ===================================================== */
-
-    [data-testid="stPopover"] > button {{
-        justify-content: center !important;
-    }}
-
-
-    /* =====================================================
-       커스텀 폰트 선택 영역
-       ===================================================== */
-
-    .font-picker {{
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-top: 5px;
-    }}
-
-
-    /* =====================================================
-       폰트 선택 항목
-       ===================================================== */
-
-    .font-choice {{
-        display: block;
-
-        width: 100%;
-        box-sizing: border-box;
-
-        padding: 10px 12px;
-
-        border-radius: 10px;
-
-        text-decoration: none !important;
-
-        color: inherit !important;
-
-        background: transparent;
-
-        border: 1px solid transparent;
-
-        font-size: 16px;
-
-        line-height: 1.35;
-
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease;
-    }}
-
-
-    /* =====================================================
-       폰트 항목 Hover
-       ===================================================== */
-
-    .font-choice:hover {{
-        background: rgba(128, 128, 128, 0.12);
-
-        border-color:
-            rgba(128, 128, 128, 0.18);
-    }}
-
-
-    /* =====================================================
-       현재 선택된 폰트
-       ===================================================== */
-
-    .font-choice.selected {{
-        background:
-            rgba(33, 150, 243, 0.12);
-
-        border-color:
-            rgba(33, 150, 243, 0.28);
-
-        font-weight: 600;
-    }}
-
-
-    /* =====================================================
-       현재 폰트 표시
-       ===================================================== */
-
-    .font-current {{
-        margin-top: 4px;
-
-        margin-bottom: 14px;
-
-        padding: 10px 12px;
-
-        border-radius: 10px;
-
-        background:
-            rgba(128, 128, 128, 0.08);
-
-        font-size: 14px;
     }}
 
     </style>
@@ -376,86 +312,136 @@ with top_col1:
 
 
 # =========================================================
-# 설정
+# 설정 버튼
 # =========================================================
 
 with top_col2:
 
-    with st.popover(
+    if st.button(
         "⚙️ 설정",
+        key="settings_toggle",
         use_container_width=True
     ):
 
-        st.markdown("#### 🎨 앱 설정")
+        st.session_state.settings_open = (
+            not st.session_state.settings_open
+        )
+
+        st.rerun()
 
 
-        # -------------------------------------------------
-        # 현재 선택된 폰트
-        # -------------------------------------------------
+# =========================================================
+# 설정 패널
+# =========================================================
 
-        st.markdown(
-            f"""
-            <div
-                class="font-current"
-                style="font-family: {current_font_css} !important;"
-            >
-                현재 폰트:
-                <strong>
-                    {st.session_state.selected_font}
-                </strong>
-            </div>
-            """,
-            unsafe_allow_html=True
+if st.session_state.settings_open:
+
+    st.markdown(
+        '<div class="settings-panel">',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        "### 🎨 앱 설정"
+    )
+
+
+    # -----------------------------------------------------
+    # 현재 폰트
+    # -----------------------------------------------------
+
+    st.markdown(
+        f"""
+        <div
+            class="current-font-box"
+            style="font-family: {current_font_css} !important;"
+        >
+            현재 폰트:
+            <strong>
+                {st.session_state.selected_font}
+            </strong>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    st.markdown(
+        "##### 폰트 선택 (15종)"
+    )
+
+
+    # -----------------------------------------------------
+    # 폰트 목록
+    #
+    # 각 폰트는 HTML로 직접 렌더링한다.
+    # 따라서 각 폰트 이름이 자기 폰트로 표시된다.
+    # -----------------------------------------------------
+
+    for font_name, font_css in font_mapping.items():
+
+        is_selected = (
+            font_name == st.session_state.selected_font
         )
 
 
-        st.markdown("폰트 선택 (15종)")
+        # 폰트 미리보기
 
-
-        # -------------------------------------------------
-        # 커스텀 폰트 선택 메뉴
-        #
-        # 중요:
-        # Streamlit selectbox를 사용하지 않고
-        # 각각의 HTML 요소에 직접 font-family를 지정한다.
-        # -------------------------------------------------
-
-        font_html = '<div class="font-picker">'
-
-
-        for font_name, font_css in font_mapping.items():
-
-            selected_class = (
-                " selected"
-                if font_name == st.session_state.selected_font
-                else ""
-            )
-
-
-            encoded_name = quote(
-                font_name,
-                safe=""
-            )
-
-
-            font_html += f"""
-            <a
-                class="font-choice{selected_class}"
-                href="?font={encoded_name}"
-                style="font-family: {font_css} !important;"
-            >
-                {font_name}
-            </a>
-            """
-
-
-        font_html += "</div>"
-
-
-        st.markdown(
-            font_html,
-            unsafe_allow_html=True
+        preview_class = (
+            "font-preview-box font-preview-selected"
+            if is_selected
+            else "font-preview-box"
         )
+
+
+        preview_text = (
+            "✓  " + font_name
+            if is_selected
+            else font_name
+        )
+
+
+        col_font, col_button = st.columns(
+            [4, 1],
+            vertical_alignment="center"
+        )
+
+
+        with col_font:
+
+            st.markdown(
+                f"""
+                <div
+                    class="{preview_class}"
+                    style="
+                        font-family: {font_css} !important;
+                        font-size: 16px;
+                    "
+                >
+                    {preview_text}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+
+        with col_button:
+
+            if st.button(
+                "선택",
+                key=f"font_select_{font_name}",
+                use_container_width=True
+            ):
+
+                st.session_state.selected_font = font_name
+
+                st.rerun()
+
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 
 # =========================================================
@@ -503,7 +489,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # -----------------------------------------------------
-    # 빠른 기록 입력
+    # 기록 입력 폼
     # -----------------------------------------------------
 
     with st.form(
@@ -535,11 +521,13 @@ if nav == "⚡ 바로 기록하기":
             )
 
 
-        st.write("📊 횟수 / 양 선택")
+        st.write(
+            "📊 횟수 / 양 선택"
+        )
 
 
         # -------------------------------------------------
-        # 횟수
+        # 숫자 입력
         # -------------------------------------------------
 
         count_input = st.number_input(
@@ -557,7 +545,7 @@ if nav == "⚡ 바로 기록하기":
 
 
         # -------------------------------------------------
-        # 빠른 증감 버튼
+        # 빠른 숫자 조절
         # -------------------------------------------------
 
         c1, c2, c3, c4, c5 = st.columns(5)
@@ -682,7 +670,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # =====================================================
-    # 오늘의 실시간 기록
+    # 오늘의 기록
     # =====================================================
 
     st.markdown(
@@ -740,7 +728,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 애플 캘린더 스타일 화면
+# 2. 캘린더 화면
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -758,7 +746,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # -----------------------------------------------------
-    # 연도 / 월 선택
+    # 연도 / 월
     # -----------------------------------------------------
 
     col_y, col_m = st.columns(2)
@@ -840,7 +828,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # -----------------------------------------------------
-    # 전체 데이터
+    # 전체 기록 데이터
     # -----------------------------------------------------
 
     if st.session_state.log_data:
@@ -863,7 +851,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # -----------------------------------------------------
-    # 날짜 버튼
+    # 캘린더 날짜
     # -----------------------------------------------------
 
     for week in cal:
@@ -900,7 +888,8 @@ elif nav == "📅 캘린더 (월간 보기)":
                     ].empty
 
 
-                # 기록이 있으면 • 표시
+                # 기록이 있으면 점 표시
+
                 btn_label = (
                     f"{day} •"
                     if has_log
@@ -931,7 +920,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # =====================================================
-    # 선택한 날짜
+    # 선택된 날짜
     # =====================================================
 
     sel_date_str = (
@@ -947,7 +936,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
     # =====================================================
-    # 선택 날짜 기록 영역
+    # 선택 날짜 기록
     # =====================================================
 
     with st.container():
@@ -959,7 +948,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
         # -------------------------------------------------
-        # 해당 날짜의 기록
+        # 해당 날짜 기록
         # -------------------------------------------------
 
         if (
@@ -977,7 +966,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
         # -------------------------------------------------
-        # 기록 출력
+        # 기록 목록
         # -------------------------------------------------
 
         if not df_target.empty:
@@ -1022,9 +1011,9 @@ elif nav == "📅 캘린더 (월간 보기)":
         )
 
 
-        # =================================================
+        # -------------------------------------------------
         # 기록 추가 버튼
-        # =================================================
+        # -------------------------------------------------
 
         if not st.session_state.is_editing:
 
@@ -1038,9 +1027,9 @@ elif nav == "📅 캘린더 (월간 보기)":
                 st.rerun()
 
 
-        # =================================================
+        # -------------------------------------------------
         # 과거 날짜 기록 추가
-        # =================================================
+        # -------------------------------------------------
 
         else:
 
