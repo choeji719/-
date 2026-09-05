@@ -148,8 +148,8 @@ st.markdown(
 
 
     /* =====================================================
-       모바일 화면 좌우 밀림/스크롤 완벽 차단
-       ===================================================== */
+        모바일 화면 좌우 밀림/스크롤 완벽 차단
+        ===================================================== */
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{
         width: 100% !important;
@@ -170,8 +170,8 @@ st.markdown(
 
 
     /* =====================================================
-       사이드바 제거
-       ===================================================== */
+        사이드바 제거
+        ===================================================== */
 
     [data-testid="stSidebar"] {{
         display: none;
@@ -179,8 +179,8 @@ st.markdown(
 
 
     /* =====================================================
-       마크다운 제목 링크 차단
-       ===================================================== */
+        마크다운 제목 링크 차단
+        ===================================================== */
 
     .stMarkdown a.header-anchor, 
     [data-testid="stMarkdownContainer"] a,
@@ -194,8 +194,8 @@ st.markdown(
 
 
     /* =====================================================
-       제목 및 컨테이너 스타일
-       ===================================================== */
+        제목 및 컨테이너 스타일
+        ===================================================== */
 
     .main-title {{
         font-size: 20px;
@@ -225,8 +225,8 @@ st.markdown(
 
 
     /* =====================================================
-       Popover 내부 크기 및 아이콘 제거
-       ===================================================== */
+        Popover 내부 크기 및 아이콘 제거
+        ===================================================== */
 
     [data-testid="stPopoverBody"] {{
         width: 300px !important;
@@ -246,8 +246,8 @@ st.markdown(
 
 
     /* =====================================================
-       폰트 선택 영역
-       ===================================================== */
+        폰트 선택 영역
+        ===================================================== */
 
     .font-title {{
         font-size: 13px;
@@ -263,19 +263,6 @@ st.markdown(
         border-radius: 8px;
         margin-bottom: 10px;
         font-size: 13px;
-    }}
-
-
-    /* =====================================================
-       캘린더 기록 박스
-       ===================================================== */
-
-    .popup-box {{
-        background-color: rgba(128, 128, 128, 0.08);
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(128, 128, 128, 0.15);
-        margin-top: 12px;
     }}
 
     </style>
@@ -428,7 +415,6 @@ if nav == "⚡ 바로 기록하기":
         if not df_today.empty:
             display_df = df_today[["시간", "항목", "횟수", "메모"]].reset_index(drop=True)
             
-            # [핵심] 툴바/메뉴(...)가 절대 생기지 않는 깔끔한 HTML 표 렌더링
             table_html = "<style>.log-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:5px;margin-bottom:10px;font-size:13px;}.log-table th{background-color:rgba(128,128,128,0.12);padding:8px 4px;text-align:center;border-bottom:2px solid rgba(128,128,128,0.2);font-weight:bold;}.log-table td{padding:8px 4px;text-align:center;border-bottom:1px solid rgba(128,128,128,0.1);word-break:break-all;}</style><table class='log-table'><thead><tr><th>시간</th><th>항목</th><th>횟수</th><th>메모</th></tr></thead><tbody>"
             for _, row in display_df.iterrows():
                 memo_val = row['메모'] if row['메모'] else '-'
@@ -443,7 +429,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일 완벽 호환 HTML 7열 그리드 캘린더)
+# 2. 캘린더 (아이폰 스타일 7열 그리드 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -477,18 +463,35 @@ elif nav == "📅 캘린더 (월간 보기)":
         except Exception:
             pass
 
-    cal = calendar.monthcalendar(selected_year, selected_month)
-    weekdays = ["월", "화", "수", "목", "금", "토", "일"]
+    # 일요일 시작으로 캘린더 생성 (firstweekday=6)
+    cal = calendar.Calendar(firstweekday=6).monthcalendar(selected_year, selected_month)
+    weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    cal_html = "<style>.ct{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:15px;}.ct th{text-align:center;font-weight:bold;color:#868e96;padding:8px 0;font-size:12px;}.ct td{text-align:center;padding:3px;vertical-align:middle;}.cb{display:block;width:100%;padding:10px 0;background-color:rgba(128,128,128,0.06);border:1px solid rgba(128,128,128,0.15);border-radius:6px;color:inherit;text-decoration:none;font-size:13px;font-weight:500;}.cb:hover{background-color:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.4);}.cb.selected{background-color:rgba(33,150,243,0.25);border-color:#2196F3;font-weight:bold;}</style><table class='ct'><thead><tr>"
+    cal_html = """
+    <style>
+    .ct { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 15px; }
+    .ct th { text-align: center; font-weight: bold; padding: 8px 0; font-size: 12px; }
+    .ct th:first-child { color: #ff4d4f; }
+    .ct th:last-child { color: #1890ff; }
+    .ct th:not(:first-child):not(:last-child) { color: #868e96; }
+    .ct td { text-align: center; padding: 4px; vertical-align: middle; }
+    .cb { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 42px; background-color: rgba(128,128,128,0.04); border: 1px solid rgba(128,128,128,0.1); border-radius: 8px; color: inherit; text-decoration: none; font-size: 13px; font-weight: 500; }
+    .cb:hover { background-color: rgba(33,150,243,0.15); border-color: rgba(33,150,243,0.4); }
+    .cb.selected { background-color: rgba(33,150,243,0.25); border-color: #2196F3; font-weight: bold; }
+    .sun { color: #ff4d4f !important; }
+    .sat { color: #1890ff !important; }
+    .dot { font-size: 10px; line-height: 4px; color: #ff4d4f; margin-top: 2px; }
+    </style>
+    <table class='ct'><thead><tr>
+    """
     for w in weekdays:
         cal_html += f"<th>{w}</th>"
     cal_html += "</tr></thead><tbody>"
 
-    for week in cal:
+    for week_idx, week in enumerate(cal):
         cal_html += "<tr>"
-        for day in week:
+        for day_idx, day in enumerate(week):
             if day == 0:
                 cal_html += "<td></td>"
             else:
@@ -496,9 +499,17 @@ elif nav == "📅 캘린더 (월간 보기)":
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
                     has_log = not df_all[df_all["날짜"] == cur_d_str].empty
-                dot = "•" if has_log else ""
+                
+                dot_html = "<div class='dot'>•</div>" if has_log else "<div style='height: 14px;'></div>"
                 btn_cls = "cb selected" if cur_d_str == sel_date_str else "cb"
-                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'>{day}{dot}</a></td>"
+                
+                day_cls = ""
+                if day_idx == 0:
+                    day_cls = " sun"
+                elif day_idx == 6:
+                    day_cls = " sat"
+
+                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
         cal_html += "</tr>"
     cal_html += "</tbody></table>"
 
@@ -506,8 +517,6 @@ elif nav == "📅 캘린더 (월간 보기)":
     st.markdown("---")
 
     st.markdown(f"### 📌 선택한 날짜: {sel_date_str}")
-
-    st.markdown('<div class="popup-box">', unsafe_allow_html=True)
 
     if not df_all.empty and "날짜" in df_all.columns:
         df_target = df_all[df_all["날짜"] == sel_date_str]
@@ -590,8 +599,6 @@ elif nav == "📅 캘린더 (월간 보기)":
             if cancel_edit:
                 st.session_state.is_editing = False
                 st.rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # =========================================================
