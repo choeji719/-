@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 import calendar
-from zoneinfo :: ZoneInfo
-
+from zoneinfo import ZoneInfo
 # 한국 시간(KST) 기준 현재 시간 가져오기 함수
 def get_kst_now():
     return datetime.now(ZoneInfo("Asia/Seoul"))
