@@ -6,49 +6,10 @@ import calendar
 # 페이지 설정
 st.set_page_config(page_title="모두의 기록 - 1초 간편 기록", page_icon="⚡", layout="centered")
 
-# 깔끔한 모바일 앱 감성 및 폰트, 다크모드 배너 대응 CSS
-st.markdown("""
-    <style>
-    /* 전체 앱에 깔끔한 모던 폰트 적용 */
-    html, body, [class*="css"] {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    .main-title {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 0px;
-    }
-    .sub-desc {
-        color: gray;
-        font-size: 13px;
-        margin-bottom: 15px;
-    }
-    
-    /* 라이트/다크 모드 모두에서 눈부시지 않은 차분한 오늘 날짜 배너 */
-    .today-banner {
-        background-color: rgba(33, 150, 243, 0.12);
-        color: inherit;
-        padding: 12px 15px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 20px;
-        text-align: center;
-        border: 1px solid rgba(33, 150, 243, 0.2);
-    }
-    
-    .popup-box {
-        background-color: rgba(128, 128, 128, 0.08);
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid rgba(128, 128, 128, 0.15);
-        margin-top: 15px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# 세션 스테이트 초기화 (선택한 폰트 저장용 포함)
+if 'selected_font' not in st.session_state:
+    st.session_state.selected_font = "Pretendard (기본 모던)"
 
-# 세션 스테이트 초기화 (데이터 저장용)
 if 'log_data' not in st.session_state:
     st.session_state.log_data = [
         {"id": 1, "날짜": datetime.now().strftime("%Y-%m-%d"), "항목": "☕ 커피 마신 잔수", "횟수": 2, "메모": "아아 마심", "시간": datetime.now().strftime("%H:%M:%S")},
@@ -61,6 +22,67 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
+# 폰트 스타일에 따른 CSS 매핑
+font_mapping = {
+    "Pretendard (기본 모던)": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    "나눔스퀘어 (깔끔하고 단정한 고딕)": "'NanumSquare', sans-serif",
+    "Gmarket 산스 (젊고 트렌디한 둥근고딕)": "'GmarketSansMedium', sans-serif",
+    "RIDIBATANG (감성적인 명조체)": "'RIDIBatang', serif"
+}
+
+current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
+
+# 동적으로 선택된 폰트가 적용되는 CSS 주입
+st.markdown(f"""
+    <style>
+    /* 구글 웹폰트 불러오기 (나눔스퀘어, 지마켓 산스, 리디바탕) */
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Square:wght@400;700&display=swap');
+    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff') format('woff');
+
+    html, body, [class*="css"] {{
+        font-family: {current_font_css} !important;
+    }}
+    
+    .main-title {{
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 0px;
+    }}
+    .sub-desc {{
+        color: gray;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }}
+    .today-banner {{
+        background-color: rgba(33, 150, 243, 0.12);
+        color: inherit;
+        padding: 12px 15px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+        border: 1px solid rgba(33, 150, 243, 0.2);
+    }}
+    .popup-box {{
+        background-color: rgba(128, 128, 128, 0.08);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        margin-top: 15px;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+# 사이드바 또는 상단에서 폰트 선택 기능 제공
+with st.sidebar:
+    st.markdown("### ⚙️ 앱 설정")
+    selected = st.selectbox("앱 폰트 변경", list(font_mapping.keys()), index=list(font_mapping.keys()).index(st.session_state.selected_font))
+    if selected != st.session_state.selected_font:
+        st.session_state.selected_font = selected
+        st.rerun()
+
 # 상단 네비게이션
 nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
 st.markdown("---")
@@ -70,7 +92,6 @@ if nav == "⚡ 바로 기록하기":
     st.markdown('<p class="main-title">⚡ 무엇을 기록할까요?</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-desc">접속하자마자 1초 만에 기록하세요.</p>', unsafe_allow_html=True)
 
-    # 오늘 날짜 안내 배너 (눈부심 방지 적용)
     today_str = datetime.now().strftime("%Y년 %m월 %d일 (%a)")
     st.markdown(f'<div class="today-banner">📅 오늘 날짜: {today_str}</div>', unsafe_allow_html=True)
 
