@@ -210,9 +210,6 @@ st.markdown(
 
     /* =====================================================
        Popover의 expand_more / expand_less 아이콘 제거
-       
-       아이콘 자체를 안 보이게 하고
-       ⚙️ 설정 텍스트만 표시
        ===================================================== */
 
     [data-testid="stPopover"] button svg {{
@@ -381,8 +378,6 @@ with top_col2:
 
         # -------------------------------------------------
         # 폰트 선택
-        #
-        # 라디오의 각 항목에 폰트별 CSS를 적용
         # -------------------------------------------------
 
         font_names = list(font_mapping.keys())
@@ -414,9 +409,6 @@ with top_col2:
 
 # =========================================================
 # 라디오 각각에 자기 폰트 적용
-#
-# Streamlit 라디오 항목은 DOM 순서대로 생성되므로
-# nth-child를 이용하여 15개 각각에 다른 폰트를 적용
 # =========================================================
 
 radio_font_css = ""
@@ -632,12 +624,15 @@ if nav == "⚡ 바로 기록하기":
                 "%H:%M:%S"
             )
 
+            # 새 고유 ID 생성 (가장 큰 id + 1)
+            new_id = (
+                max([item["id"] for item in st.session_state.log_data]) + 1
+                if st.session_state.log_data
+                else 1
+            )
 
             new_entry = {
-                "id": len(
-                    st.session_state.log_data
-                ) + 1,
-
+                "id": new_id,
                 "날짜": save_kst.strftime(
                     "%Y-%m-%d"
                 ),
@@ -833,6 +828,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
         df_all = pd.DataFrame(
             columns=[
+                "id",
                 "날짜",
                 "항목",
                 "횟수",
@@ -952,7 +948,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
         # -------------------------------------------------
-        # 기록 목록
+        # 기록 목록 및 삭제 기능
         # -------------------------------------------------
 
         if not df_target.empty:
@@ -975,13 +971,27 @@ elif nav == "📅 캘린더 (월간 보기)":
                     "없음"
                 )
 
+                row_id = row.get("id")
 
-                st.text(
-                    f"[{time_str}] "
-                    f"{row['항목']}: "
-                    f"{row['횟수']}회 "
-                    f"(메모: {memo_str})"
-                )
+                # 각 기록을 가로로 배치 (내용 | 삭제 버튼)
+                c_info, c_del = st.columns([4, 1])
+
+                with c_info:
+                    st.text(
+                        f"[{time_str}] "
+                        f"{row['항목']}: "
+                        f"{row['횟수']}회 "
+                        f"(메모: {memo_str})"
+                    )
+
+                with c_del:
+                    if st.button("🗑️ 삭제", key=f"del_{row_id}", use_container_width=True):
+                        # log_data에서 해당 id를 가진 항목 제거
+                        st.session_state.log_data = [
+                            item for item in st.session_state.log_data if item["id"] != row_id
+                        ]
+                        st.success("기록이 삭제되었습니다.")
+                        st.rerun()
 
 
         else:
@@ -1087,12 +1097,14 @@ elif nav == "📅 캘린더 (월간 보기)":
                         "%H:%M:%S"
                     )
 
+                    new_id = (
+                        max([item["id"] for item in st.session_state.log_data]) + 1
+                        if st.session_state.log_data
+                        else 1
+                    )
 
                     new_entry = {
-                        "id": len(
-                            st.session_state.log_data
-                        ) + 1,
-
+                        "id": new_id,
                         "날짜": sel_date_str,
 
                         "항목": add_category,
