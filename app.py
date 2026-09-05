@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime, date
 import calendar
 from zoneinfo import ZoneInfo
+
 # 한국 시간(KST) 기준 현재 시간 가져오기 함수
 def get_kst_now():
     return datetime.now(ZoneInfo("Asia/Seoul"))
@@ -119,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱에 현재 폰트 및 불필요 요소 제거 CSS 적용
+# 전체 앱에 현재 폰트 및 모바일 캘린더 최적화 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -152,6 +153,24 @@ st.markdown(
 
     [data-testid="stSidebar"] {{
         display: none;
+    }}
+
+
+    /* =====================================================
+       모바일 화면(스마트폰)에서 캘린더 7열 버튼들이 찌그러지지 않고
+       가로로 나란히 유지되도록 간격과 패딩 축소
+       ===================================================== */
+    @media (max-width: 768px) {{
+        [data-testid="column"] {{
+            flex: 1 !important;
+            min-width: 0 !important;
+            padding: 0 1px !important;
+        }}
+        [data-testid="column"] button {{
+            padding: 4px 0px !important;
+            font-size: 12px !important;
+            min-height: 32px !important;
+        }}
     }}
 
 
@@ -674,7 +693,7 @@ if nav == "⚡ 바로 기록하기":
 
 
     # =====================================================
-    # 오늘의 기록 (마크다운 표 형식으로 깔끔하게 출력)
+    # 오늘의 기록
     # =====================================================
 
     st.markdown(
@@ -710,13 +729,13 @@ if nav == "⚡ 바로 기록하기":
                 ]
             ].reset_index(drop=True)
 
-            # 마크다운 표 생성 (툴바 ... 메뉴가 생기지 않음)
-            markdown_table = "| 시간 | 항목 | 횟수 | 메모 |\n| :---: | :---: | :---: | :---: |\n"
-            for _, row in display_df.iterrows():
-                memo_val = row['메모'] if row['메모'] else '-'
-                markdown_table += f"| {row['시간']} | {row['항목']} | {row['횟수']}회 | {memo_val} |\n"
 
-            st.markdown(markdown_table)
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
 
         else:
 
@@ -814,6 +833,7 @@ elif nav == "📅 캘린더 (월간 보기)":
                 text-align: center;
                 font-weight: bold;
                 color: #868e96;
+                font-size: 13px;
             ">
                 {day_name}
             </div>
@@ -891,7 +911,7 @@ elif nav == "📅 캘린더 (월간 보기)":
 
 
                 btn_label = (
-                    f"{day} •"
+                    f"{day}•"
                     if has_log
                     else f"{day}"
                 )
