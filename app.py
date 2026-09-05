@@ -429,7 +429,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (아이폰 스타일 감성 캘린더)
+# 2. 캘린더 (순수 플렉스박스 기반 아이폰 감성 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -468,18 +468,37 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 아이폰 스타일 캘린더 CSS (완전한 미니멀 원형 디자인 및 고정 높이 제거)
+    # 순수 Flexbox 구조의 아이폰 스타일 캘린더 HTML
     cal_html = """
     <style>
-    .iphone-cal-wrap { width: 100%; margin-bottom: 10px; }
-    .iphone-cal { width: 100%; border-collapse: collapse; table-layout: fixed; border: none !important; background: transparent !important; }
-    .iphone-cal th { text-align: center; font-weight: 500; padding: 4px 0 8px 0; font-size: 12px; border: none !important; background: transparent !important; }
-    .iphone-cal th:first-child { color: #ff4d4f; }
-    .iphone-cal th:last-child { color: #1890ff; }
-    .iphone-cal th:not(:first-child):not(:last-child) { color: #868e96; }
-    .iphone-cal td { text-align: center; padding: 3px 0; vertical-align: middle; border: none !important; background: transparent !important; }
-    
-    .day-cell {
+    .ios-cal-container {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    .ios-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-weight: 500;
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+    .ios-weekdays div:nth-child(1) { color: #ff3b30; }
+    .ios-weekdays div:nth-child(7) { color: #007aff; }
+    .ios-weekdays div:not(:nth-child(1)):not(:nth-child(7)) { color: #8e8e93; }
+
+    .ios-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        margin-bottom: 2px;
+    }
+    .ios-day-cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 38px;
+    }
+    .ios-day-btn {
         display: inline-flex;
         flex-direction: column;
         align-items: center;
@@ -493,60 +512,60 @@ elif nav == "📅 캘린더 (월간 보기)":
         text-decoration: none;
         font-size: 13px;
         font-weight: 400;
-        margin: 0 auto;
-        transition: background-color 0.2s;
+        transition: background-color 0.15s;
     }
-    .day-cell:hover {
+    .ios-day-btn:hover {
         background-color: rgba(128, 128, 128, 0.15);
     }
-    .day-cell.selected {
+    .ios-day-btn.selected {
         background-color: #ff3b30 !important;
         color: white !important;
         font-weight: bold;
     }
-    .sun { color: #ff4d4f !important; }
-    .sat { color: #1890ff !important; }
-    .dot {
+    .ios-sun { color: #ff3b30 !important; }
+    .ios-sat { color: #007aff !important; }
+    .ios-dot {
         width: 3px;
         height: 3px;
         background-color: #ff3b30;
         border-radius: 50%;
         margin-top: 1px;
     }
-    .day-cell.selected .dot {
+    .ios-day-btn.selected .ios-dot {
         background-color: white !important;
     }
     </style>
-    <div class="iphone-cal-wrap">
-    <table class='iphone-cal'><thead><tr>
+
+    <div class="ios-cal-container">
+        <div class="ios-weekdays">
     """
     for w in weekdays:
-        cal_html += f"<th>{w}</th>"
-    cal_html += "</tr></thead><tbody>"
+        cal_html += f"<div>{w}</div>"
+    cal_html += "</div>"
 
     for week_idx, week in enumerate(cal):
-        cal_html += "<tr>"
+        cal_html += "<div class='ios-week'>"
         for day_idx, day in enumerate(week):
-            if day == 0:
-                cal_html += "<td></td>"
-            else:
+            cal_html += "<div class='ios-day-cell'>"
+            if day != 0:
                 cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
                     has_log = not df_all[df_all["날짜"] == cur_d_str].empty
                 
-                dot_html = "<div class='dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
-                btn_cls = "day-cell selected" if cur_d_str == sel_date_str else "day-cell"
+                dot_html = "<div class='ios-dot'></div>" if has_log else "<div style='height: 3px; margin-top: 1px; visibility: hidden;'>•</div>"
+                btn_cls = "ios-day-btn selected" if cur_d_str == sel_date_str else "ios-day-btn"
                 
                 day_cls = ""
                 if day_idx == 0:
-                    day_cls = " sun"
+                    day_cls = " ios-sun"
                 elif day_idx == 6:
-                    day_cls = " sat"
+                    day_cls = " ios-sat"
 
-                cal_html += f"<td><a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a></td>"
-        cal_html += "</tr>"
-    cal_html += "</tbody></table></div>"
+                cal_html += f"<a href='?cal_date={cur_d_str}' target='_self' class='{btn_cls}'><span class='{day_cls}'>{day}</span>{dot_html}</a>"
+            cal_html += "</div>"
+        cal_html += "</div>"
+    cal_html += "</div>"
 
     st.markdown(cal_html, unsafe_allow_html=True)
     st.markdown("---")
