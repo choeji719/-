@@ -22,25 +22,44 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
-# 둥글둥글하고 부드러운 폰트 추가 및 매핑
+# 15가지 다양한 폰트 매핑
 font_mapping = {
-    "CookieRun (발랄하고 둥글둥글)": "'CookieRun', sans-serif",
+    "CookieRun (발랄하고 둥글둥글)": "'CookieRun-Regular', sans-serif",
+    "Jua (귀여운 둥근고딕)": "'Jua', sans-serif",
+    "Do Hyeon (레트로 둥근고딕)": "'Do Hyeon', sans-serif",
+    "Sunflower (부드러운 손글씨)": "'Sunflower', sans-serif",
+    "Poor Story (동화책 손글씨)": "'Poor Story', cursive",
+    "Gaegu (귀여운 손글씨)": "'Gaegu', cursive",
     "IBM Plex Sans KR (부드러운 고딕)": "'IBM Plex Sans KR', sans-serif",
     "Pretendard (기본 모던)": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    "나눔스퀘어 (깔끔하고 단정함)": "'NanumSquare', sans-serif"
+    "NanumSquare (깔끔하고 단정함)": "'NanumSquare', sans-serif",
+    "Nanum Gothic (나눔고딕)": "'Nanum Gothic', sans-serif",
+    "Nanum Myeongjo (나눔명조)": "'Nanum Myeongjo', serif",
+    "Black Han Sans (굵고 강렬함)": "'Black Han Sans', sans-serif",
+    "Gowun Dodum (부드러운 돋움)": "'Gowun Dodum', sans-serif",
+    "Gowun Batang (부드러운 바탕)": "'Gowun Batang', serif",
+    "Gugi (독특한 픽셀/레트로)": "'Gugi', cursive"
 }
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# Streamlit의 모든 컴포넌트(입력창, 버튼, 표, 라벨 등)에 폰트가 강제로 적용되도록 CSS 세분화
+# Streamlit 내부 아이콘(keyboard_double 등)이 깨지지 않도록 안전하게 폰트 적용
 st.markdown(f"""
     <style>
-    /* 구글 웹폰트 및 눈누 폰트 불러오기 */
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;600&family=Nanum+Square:wght@400;700&display=swap');
-    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2209-2@1.0/CookieRun-Regular.woff2') format('woff2');
+    /* 다양한 15가지 폰트를 위한 구글 웹폰트 및 눈누 불러오기 */
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap');
+    @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2209-2@1.0/CookieRun-Regular.woff2');
 
-    /* 앱 전체와 모든 위젯 내부 글꼴 강제 적용 */
-    html, body, [class*="css"], .stTextInput, .stSelectbox, .stNumberInput, .stButton, div, span, p, label {{
+    @font-face {{
+        font-family: 'CookieRun-Regular';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2209-2@1.0/CookieRun-Regular.woff2') format('woff2');
+        font-weight: normal;
+        font-style: normal;
+    }}
+
+    /* 시스템 아이콘을 건드리지 않고 일반 텍스트, 입력창, 버튼 등에만 안전하게 폰트 적용 */
+    html, body, p, span, div, label, input, textarea, select, 
+    .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
         font-family: {current_font_css} !important;
     }}
     
@@ -75,10 +94,14 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 사이드바 설정 메뉴
+# 사이드바 설정 메뉴 (15가지 폰트 선택)
 with st.sidebar:
     st.markdown("### ⚙️ 앱 설정")
-    selected = st.selectbox("앱 폰트 변경", list(font_mapping.keys()), index=list(font_mapping.keys()).index(st.session_state.selected_font))
+    selected = st.selectbox(
+        "앱 폰트 변경 (15종)", 
+        list(font_mapping.keys()), 
+        index=list(font_mapping.keys()).index(st.session_state.selected_font)
+    )
     if selected != st.session_state.selected_font:
         st.session_state.selected_font = selected
         st.rerun()
