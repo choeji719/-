@@ -22,7 +22,10 @@ if 'selected_date' not in st.session_state:
 if 'is_editing' not in st.session_state:
     st.session_state.is_editing = False
 
-# 15가지 폰트와 CSS 매핑
+if 'current_count' not in st.session_state:
+    st.session_state.current_count = 1
+
+# 15가지 폰트 매핑
 font_mapping = {
     "CookieRun (발랄하고 둥글둥글)": "'CookieRun-Regular', sans-serif",
     "Jua (귀여운 둥근고딕)": "'Jua', sans-serif",
@@ -43,7 +46,7 @@ font_mapping = {
 
 current_font_css = font_mapping.get(st.session_state.selected_font, "-apple-system, sans-serif")
 
-# CSS 주입
+# CSS 주입 및 폰트 미리보기 스타일 추가
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Square:wght@400;700&family=Poor+Story&family=Sunflower:wght@300&display=swap');
@@ -56,6 +59,7 @@ st.markdown(f"""
         font-style: normal;
     }}
 
+    /* 전체 앱에 선택된 폰트 적용 */
     html, body, p, span, div, label, input, textarea, select, 
     .stTextInput, .stSelectbox, .stNumberInput, .stButton, .stMarkdown {{
         font-family: {current_font_css} !important;
@@ -96,23 +100,31 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 상단 레이아웃: 화면 이동 탭
-nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
+# 상단 레이아웃: 왼쪽은 화면 이동 탭, 오른쪽은 ⚙️ 설정 팝오버 버튼
+top_col1, top_col2 = st.columns([3, 1])
 
-# ⚙️ 설정 패널 (st.expander로 아이콘 깨짐 및 텍스트 겹침 문제 원천 해결)
-with st.expander("⚙️ 앱 설정 (글꼴 변경)"):
-    st.markdown("#### 🎨 15가지 글꼴 선택")
-    st.markdown("원하는 글꼴을 클릭하면 앱 전체에 즉시 적용됩니다.")
-    
-    # 각 글꼴별로 실제 해당 폰트 스타일을 적용한 버튼 나열
-    for font_name, font_css in font_mapping.items():
-        # 현재 선택된 폰트 표시
-        is_selected = (font_name == st.session_state.selected_font)
-        btn_label = f"✨ [적용됨] {font_name}" if is_selected else font_name
+with top_col1:
+    nav = st.radio("화면 이동", ["⚡ 바로 기록하기", "📅 캘린더 (월간 보기)"], horizontal=True, label_visibility="collapsed")
+
+with top_col2:
+    with st.popover("⚙️ 설정", use_container_width=True):
+        st.markdown("#### 🎨 앱 설정")
+        selected = st.selectbox(
+            "폰트 선택 (15종)", 
+            list(font_mapping.keys()), 
+            index=list(font_mapping.keys()).index(st.session_state.selected_font)
+        )
         
-        # 개별 버튼에 해당 폰트를 인라인 스타일로 적용
-        if st.button(btn_label, key=f"font_btn_{font_name}", use_container_width=True):
-            st.session_state.selected_font = font_name
+        # 선택한 폰트의 실제 모양을 미리 볼 수 있는 예시 박스 추가
+        preview_css = font_mapping.get(selected, "sans-serif")
+        st.markdown(f"""
+            <div style="padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); margin-top: 10px; text-align: center; font-family: {preview_css} !important;">
+                ✨ 폰트 미리보기: 모두의 기록
+            </div>
+        """, unsafe_allow_html=True)
+
+        if selected != st.session_state.selected_font:
+            st.session_state.selected_font = selected
             st.rerun()
 
 st.markdown("---")
@@ -125,40 +137,36 @@ if nav == "⚡ 바로 기록하기":
     today_str = datetime.now().strftime("%Y년 %m월 %d일 (%a)")
     st.markdown(f'<div class="today-banner">📅 오늘 날짜: {today_str}</div>', unsafe_allow_html=True)
 
-    if 'current_count' not in st.session_state:
-        st.session_state.current_count = 1
+    category = st.selectbox(
+        "기록 항목", 
+        ["☕ 커피 마신 잔수", "💪 운동 횟수", "💊 영양제 뽀개기", "💧 물 마신 컵", "📚 책 읽은 페이지", "✨ 직접 입력"]
+    )
+    if category == "✨ 직접 입력":
+        category = st.text_input("어떤 행동인가요?")
+        
+    st.write("📊 횟수 / 양 선택")
+    count_input = st.number_input("직접 입력", min_value=1, value=int(st.session_state.current_count), step=1, label_visibility="collapsed")
+    st.session_state.current_count = count_input
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+    if c1.button("-10", use_container_width=True):
+        st.session_state.current_count = max(1, st.session_state.current_count - 10)
+        st.rerun()
+    if c2.button("-5", use_container_width=True):
+        st.session_state.current_count = max(1, st.session_state.current_count - 5)
+        st.rerun()
+    if c3.button("-1", use_container_width=True):
+        st.session_state.current_count = max(1, st.session_state.current_count - 1)
+        st.rerun()
+    if c4.button("+5", use_container_width=True):
+        st.session_state.current_count += 5
+        st.rerun()
+    if c5.button("+10", use_container_width=True):
+        st.session_state.current_count += 10
+        st.rerun()
 
     with st.form("quick_log_form", clear_on_submit=False):
-        category = st.selectbox(
-            "기록 항목", 
-            ["☕ 커피 마신 잔수", "💪 운동 횟수", "💊 영양제 뽀개기", "💧 물 마신 컵", "📚 책 읽은 페이지", "✨ 직접 입력"]
-        )
-        if category == "✨ 직접 입력":
-            category = st.text_input("어떤 행동인가요?")
-            
-        st.write("📊 횟수 / 양 선택")
-        count_input = st.number_input("직접 입력", min_value=1, value=int(st.session_state.current_count), step=1, label_visibility="collapsed")
-        st.session_state.current_count = count_input
-
-        c1, c2, c3, c4, c5 = st.columns(5)
-        if c1.form_submit_button("-10", use_container_width=True):
-            st.session_state.current_count = max(1, st.session_state.current_count - 10)
-            st.rerun()
-        if c2.form_submit_button("-5", use_container_width=True):
-            st.session_state.current_count = max(1, st.session_state.current_count - 5)
-            st.rerun()
-        if c3.form_submit_button("-1", use_container_width=True):
-            st.session_state.current_count = max(1, st.session_state.current_count - 1)
-            st.rerun()
-        if c4.form_submit_button("+5", use_container_width=True):
-            st.session_state.current_count += 5
-            st.rerun()
-        if c5.form_submit_button("+10", use_container_width=True):
-            st.session_state.current_count += 10
-            st.rerun()
-
         memo = st.text_input("메모 (선택)", placeholder="특이사항 입력")
-        
         submitted = st.form_submit_button("🚀 지금 바로 기록 저장", use_container_width=True)
         
         if submitted:
