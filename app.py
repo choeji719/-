@@ -139,12 +139,17 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱 스타일 및 부드러운 전환(Fade-in) 애니메이션 적용
+# 전체 앱 스타일 및 부드러운 페이지 전환(View Transition) 적용
 # =========================================================
 
 st.markdown(
     f"""
     <style>
+
+    /* 브라우저 네비게이션 시 깜빡임 없이 부드럽게 크로스페이드 전환 */
+    @view-transition {{
+        navigation: auto;
+    }}
 
     html,
     body,
@@ -167,13 +172,8 @@ st.markdown(
 
 
     /* =====================================================
-        화면 전환 깜빡임 방지용 부드러운 페이드인 애니메이션
+        모바일 화면 좌우 밀림/스크롤 완벽 차단
         ===================================================== */
-
-    @keyframes fadeIn {{
-        from {{ opacity: 0.3; }}
-        to {{ opacity: 1; }}
-    }}
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {{
         width: 100% !important;
@@ -182,7 +182,6 @@ st.markdown(
         box-sizing: border-box !important;
         margin: 0 !important;
         padding: 0 !important;
-        animation: fadeIn 0.25s ease-in-out !important;
     }}
 
     .block-container {{
