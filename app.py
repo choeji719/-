@@ -179,11 +179,10 @@ st.markdown(
 
 
     /* =====================================================
-        마크다운 제목 링크 차단
+        마크다운 제목 링크 차단 (캘린더 링크는 제외)
         ===================================================== */
 
     .stMarkdown a.header-anchor, 
-    [data-testid="stMarkdownContainer"] a,
     h3 a,
     h2 a,
     h1 a,
@@ -429,7 +428,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일 완벽 호환 아이폰 스타일 표 캘린더)
+# 2. 캘린더 (아이폰 스타일 표 캘린더)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -468,7 +467,7 @@ elif nav == "📅 캘린더 (월간 보기)":
     weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
-    # 안정적인 HTML Table 구조를 활용한 아이폰 스타일 캘린더
+    # 아이폰 스타일 캘린더 CSS 및 링크 표시 보장
     cal_html = """
     <style>
     .iphone-table {
@@ -513,6 +512,7 @@ elif nav == "📅 캘린더 (월간 보기)":
         font-size: 14px !important;
         font-weight: 400 !important;
         margin: 0 auto !important;
+        pointer-events: auto !important;
     }
     .iphone-cell:hover {
         background-color: rgba(128, 128, 128, 0.2) !important;
