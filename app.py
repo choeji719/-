@@ -78,7 +78,7 @@ if "is_editing" not in st.session_state:
     st.session_state.is_editing = False
 
 if "current_count" not in st.session_state:
-    st.session_state.current_count = int(kst_now.strftime("%Y"))
+    st.session_state.current_count = 1
 
 
 # =========================================================
@@ -120,7 +120,7 @@ st.markdown(
 
 
 # =========================================================
-# 전체 앱에 현재 폰트 및 모바일 캘린더 스타일 적용
+# 전체 앱에 현재 폰트 및 모바일 달력 최적화 CSS 적용
 # =========================================================
 
 st.markdown(
@@ -153,6 +153,23 @@ st.markdown(
 
     [data-testid="stSidebar"] {{
         display: none;
+    }}
+
+
+    /* =====================================================
+       모바일 화면에서 캘린더 7열 컬럼 간격 최소화
+       ===================================================== */
+    @media (max-width: 768px) {{
+        [data-testid="column"] {{
+            flex: 1 !important;
+            min-width: 0 !important;
+            padding: 0 1px !important;
+        }}
+        [data-testid="column"] button {{
+            padding: 6px 0px !important;
+            font-size: 13px !important;
+            min-height: 36px !important;
+        }}
     }}
 
 
@@ -734,7 +751,7 @@ if nav == "⚡ 바로 기록하기":
 
 
 # =========================================================
-# 2. 캘린더 (모바일에서도 깨지지 않는 HTML 테이블 달력)
+# 2. 캘린더 (Streamlit 네이티브 컬럼 기반 모바일 최적화 달력)
 # =========================================================
 
 elif nav == "📅 캘린더 (월간 보기)":
@@ -801,29 +818,14 @@ elif nav == "📅 캘린더 (월간 보기)":
                 "날짜",
                 "항목",
                 "횟수",
-                "메mo",
+                "메모",
                 "시간"
             ]
         )
 
 
     # -----------------------------------------------------
-    # 쿼리 파라미터 처리 (날짜 클릭 감지용)
-    # -----------------------------------------------------
-    query_params = st.query_params
-    if "cal_date" in query_params:
-        try:
-            clicked_date_str = query_params["cal_date"]
-            if isinstance(clicked_date_str, list):
-                clicked_date_str = clicked_date_str[0]
-            st.session_state.selected_date = datetime.strptime(clicked_date_str, "%Y-%m-%d").date()
-            st.session_state.is_editing = False
-        except Exception:
-            pass
-
-
-    # -----------------------------------------------------
-    # HTML 달력 생성 (모바일 및 PC 호환 7열 고정 테이블)
+    # 요일 헤더 출력
     # -----------------------------------------------------
 
     cal = calendar.monthcalendar(
@@ -833,91 +835,49 @@ elif nav == "📅 캘린더 (월간 보기)":
 
     weekdays = ["월", "화", "수", "목", "금", "토", "일"]
 
-    cal_html = f"""
-    <style>
-        .calendar-table {{
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-bottom: 20px;
-        }}
-        .calendar-table th {{
-            text-align: center;
-            font-weight: bold;
-            color: #868e96;
-            padding: 8px 0;
-            font-size: 14px;
-        }}
-        .calendar-table td {{
-            text-align: center;
-            padding: 4px;
-            vertical-align: middle;
-        }}
-        .cal-btn {{
-            display: block;
-            width: 100%;
-            padding: 10px 0;
-            background-color: rgba(128, 128, 128, 0.05);
-            border: 1px solid rgba(128, 128, 128, 0.15);
-            border-radius: 8px;
-            color: inherit;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }}
-        .cal-btn:hover {{
-            background-color: rgba(33, 150, 243, 0.15);
-            border-color: rgba(33, 150, 243, 0.4);
-        }}
-        .cal-btn.selected {{
-            background-color: rgba(33, 150, 243, 0.25);
-            border-color: #2196F3;
-            font-weight: bold;
-        }}
-    </style>
-    <table class="calendar-table">
-        <thead>
-            <tr>
-    """
+    cols = st.columns(7)
+    for i, day_name in enumerate(weekdays):
+        cols[i].markdown(
+            f"<div style='text-align: center; font-weight: bold; color: #868e96; font-size: 13px;'>{day_name}</div>",
+            unsafe_allow_html=True
+        )
 
-    for w in weekdays:
-        cal_html += f"<th>{w}</th>"
-    cal_html += "</tr></thead><tbody>"
+    st.markdown("<br>", unsafe_allow_html=True)
+
+
+    # -----------------------------------------------------
+    # 날짜 버튼 그리드 출력
+    # -----------------------------------------------------
 
     sel_date_str = st.session_state.selected_date.strftime("%Y-%m-%d")
 
     for week in cal:
-        cal_html += "<tr>"
-        for day in week:
+        cols = st.columns(7)
+        for i, day in enumerate(week):
             if day == 0:
-                cal_html += "<td></td>"
+                cols[i].markdown("")
             else:
-                cur_d_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
+                current_date_str = f"{selected_year}-{selected_month:02d}-{day:02d}"
                 
-                # 기록 여부 확인
                 has_log = False
                 if not df_all.empty and "날짜" in df_all.columns:
-                    has_log = not df_all[df_all["날짜"] == cur_d_str].empty
+                    has_log = not df_all[df_all["날짜"] == current_date_str].empty
                 
-                dot = " •" if has_log else ""
+                btn_label = f"{day} •" if has_log else f"{day}"
                 
-                # 선택된 날짜 강조 클래스
-                btn_class = "cal-btn selected" if cur_d_str == sel_date_str else "cal-btn"
-                
-                # Streamlit 리런을 유발하기 위한 링크 구조 (query_params 활용)
-                cal_html += f"""
-                    <td>
-                        <a href="?cal_date={cur_d_str}" target="_self" class="{btn_class}">
-                            {day}{dot}
-                        </a>
-                    </td>
-                """
-        cal_html += "</tr>"
+                # 선택된 날짜 표시는 버튼 이름이나 상태로 구분
+                if current_date_str == sel_date_str:
+                    btn_label = f"[{day}]" + ("•" if has_log else "")
 
-    cal_html += "</tbody></table>"
+                if cols[i].button(btn_label, key=f"date_{current_date_str}", use_container_width=True):
+                    st.session_state.selected_date = date(
+                        selected_year,
+                        selected_month,
+                        day
+                    )
+                    st.session_state.is_editing = False
+                    st.rerun()
 
-    st.markdown(cal_html, unsafe_allow_html=True)
 
     st.markdown("---")
 
